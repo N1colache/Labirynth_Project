@@ -31,9 +31,20 @@ public class PlayerCam : MonoBehaviour
 
       float sensX = usingGamepad ? gamepadSensX : mouseSensX;
       float sensY = usingGamepad ? gamepadSensY : mouseSensY;
-
-      float mouseX = lookInput.x * Time.deltaTime * sensX;
-      float mouseY = lookInput.y * Time.deltaTime * sensY;
+      
+      float mouseX;
+      float mouseY;
+      if (usingGamepad)
+      {
+          mouseX = lookInput.x * Time.deltaTime * sensX;
+          mouseY = lookInput.y * Time.deltaTime * sensY;
+      }
+      else
+      {
+         mouseX = lookInput.x * sensX;
+         mouseY = lookInput.y * sensY;
+      }
+      
 
       _yRotation += mouseX;
 
@@ -44,15 +55,4 @@ public class PlayerCam : MonoBehaviour
       orientation.rotation = Quaternion.Euler(0f, _yRotation, 0f);
       
    }
-   
-   public void DoFov(float endValue)
-   {
-      GetComponent<Camera>().DOFieldOfView(endValue, 0.25f);
-   }
-
-   public void DoTilt(float zTilt)
-   {
-      transform.DOLocalRotate(new Vector3(0f, 0f, zTilt), 0.25f);
-   }
-  
 }

@@ -27,7 +27,7 @@ public class ControlerManager : MonoBehaviour
      public event Action<bool> OnCrouchChanged;
      
      [SerializeField] private float jumpBufferTime = 0.15f;
-     private float jumpBuffer;
+     private float lastJumpPressTime;
     
      private void OnMovement(InputValue value)
      {
@@ -37,7 +37,11 @@ public class ControlerManager : MonoBehaviour
      private void OnJump(InputValue value)
      {
          jumpHeld = value.isPressed;
-         if(value.isPressed == true) jumpPending = true;
+         if(value.isPressed == true)
+         {
+             jumpPending = true;
+             lastJumpPressTime = Time.time;
+         }
          Debug.Log("onJump" + value.isPressed);
      }
 
@@ -45,8 +49,17 @@ public class ControlerManager : MonoBehaviour
      {
          if (jumpPending == true)
          {
-             jumpPending = false;
-             return true;
+             if (Time.time - lastJumpPressTime > jumpBufferTime)
+             {
+                 jumpPending = false;
+                 return false; 
+             }
+             else
+             {
+                  jumpPending = false;
+                  return true;
+             }
+            
          }
          else
          {

@@ -150,8 +150,8 @@ public class WallRunning : MonoBehaviour
         if (cam != null)
         {
             cam.DoFov(wallRunFov);
-            //if (wallLeft) cam.DoTilt(tiltAngle);
-            //if (wallRight) cam.DoTilt(-tiltAngle);
+            if (wallLeft) cam.DoTilt(tiltAngle);
+            if (wallRight) cam.DoTilt(-tiltAngle);
         }
     }
 
@@ -195,8 +195,8 @@ public class WallRunning : MonoBehaviour
 
         if (cam != null)
         {
-           // cam.DoFov(normalFov);
-           // cam.DoTilt(0f);
+           cam.DoFov(normalFov); 
+           cam.DoTilt(0f);
         }
     }
 

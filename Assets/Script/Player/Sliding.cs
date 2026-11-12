@@ -43,7 +43,7 @@ public class Sliding : MonoBehaviour
         verticalInput = controler.moveInput.y;
 
         bool hasInput = horizontalInput != 0f || verticalInput != 0f;
-        bool canSlide = !pm.sliding && !pm.restricted && !pm.freeze && !pm.activeGrapple && hasInput && pm.grounded;
+        bool canSlide = !pm.sliding && !pm.restricted && !pm.freeze  && hasInput && pm.grounded;
 
         // Détection de l'appui (Front montant)
         if (controler.slideInput && !slideInputPrevious && canSlide)

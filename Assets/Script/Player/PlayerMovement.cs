@@ -12,11 +12,9 @@ public class PlayerMovement : MonoBehaviour
         Walking,
         Sprinting,
         Wallrunning,
-        Swinging,
         Climbing,
         Vaulting,
         Crouching,
-        Dashing,
         Sliding,
         Air
     }
@@ -26,6 +24,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Climbing climbingScript;
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
+    [SerializeField] private PlayerStamina stamina;
 
     [Header("Movement Speeds")]
     [SerializeField] private float walkSpeed = 7f;
@@ -34,8 +33,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float wallRunSpeed = 8f;
     [SerializeField] private float climSpeed = 5f;
     [SerializeField] private float vaultSpeed = 10f;
-    [SerializeField] private float dashSpeed = 25f;
-    [SerializeField] private float swingSpeed = 15f;
     [SerializeField] private float crouchSpeed = 3.5f;
     public float maxYSpeed;
 
@@ -43,9 +40,12 @@ public class PlayerMovement : MonoBehaviour
     private float desiredMoveSpeed;
     private float lastDesiredMoveSpeed;
 
+    [Header("Stamina")] 
+    [SerializeField] private float sprintStaminaCost = 12f;
+    
+    
     [Header("Speed Multipliers")] 
     [SerializeField] private float slopeIncreaseMultiplier = 1.5f;
-    [SerializeField] private float dashSpeedChangeFactor = 5f;
     [SerializeField] private float slideSpeedChangeFactor = 4f;
     [SerializeField] private float sprintSpeedChangeFactor = 2f;
     [SerializeField] private float wallRunSpeedChangeFactor = 2f;
@@ -81,12 +81,10 @@ public class PlayerMovement : MonoBehaviour
     public bool wallrunning;
     public bool climbing;
     public bool vaulting;
-    public bool dashing;
-    public bool swinging;
     public bool freeze;
     public bool unlimited;
     public bool restricted;
-    public bool activeGrapple;
+    
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI text_speed;
@@ -97,11 +95,8 @@ public class PlayerMovement : MonoBehaviour
     private float verticalInput;
     private Vector3 moveDirection;
 
-    // Variables Grapple / JumpToPosition
-    private bool enableMovementOnNextTouch;
-    private float grappleStartTime;
-    private Vector3 grappleTargetPosition;
-    private float grappleTrajectoryHeight;
+    [SerializeField] private float coyoteTime = 0.12f;
+     private float lastTimeGround;
 
     private void Start()
     {
@@ -110,12 +105,17 @@ public class PlayerMovement : MonoBehaviour
         rb.freezeRotation = true;
         readyToJump = true;
         startYScale = transform.localScale.y;
+        if (stamina == null) stamina = GetComponent<PlayerStamina>();
     }
 
     private void Update()
     {
         // Ground Check
         grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
+        
+        if(grounded)
+            lastTimeGround = Time.time;
+       
 
         MyInput();
         SpeedControl();
@@ -123,7 +123,7 @@ public class PlayerMovement : MonoBehaviour
         UpdateUI();
 
         // Application du Drag selon le sol et l'état
-        if ((state == MovementState.Walking || state == MovementState.Sprinting || state == MovementState.Crouching) && !activeGrapple)
+        if ((state == MovementState.Walking || state == MovementState.Sprinting || state == MovementState.Crouching) )
             rb.linearDamping = groundDrag;
         else
             rb.linearDamping = 0f;
@@ -140,9 +140,19 @@ public class PlayerMovement : MonoBehaviour
 
         horizontalInput = controler.moveInput.x;
         verticalInput = controler.moveInput.y;
+        bool canStillJump;
+        if(grounded || Time.time - lastTimeGround < coyoteTime)
+        {
+             canStillJump = true;
+        }
+        else
+        {
+            canStillJump = false;
+        }
+
 
         // Saut
-        if (controler.ConsumeJump() && readyToJump && grounded) 
+        if (  readyToJump && canStillJump && controler.ConsumeJump()) 
         {
             readyToJump = false;
             Jump();
@@ -171,18 +181,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void StateHandler()
     {
-        if (swinging)
-        {
-            state = MovementState.Swinging;
-            desiredMoveSpeed = swingSpeed;
-        }
-        else if (dashing)
-        {
-            state = MovementState.Dashing;
-            desiredMoveSpeed = dashSpeed;
-            speedIncreaseMultiplier = dashSpeedChangeFactor;
-        }
-        else if (freeze)
+        if (freeze)
         {
             state = MovementState.Freeze;
             rb.linearVelocity = Vector3.zero;
@@ -230,11 +229,15 @@ public class PlayerMovement : MonoBehaviour
             state = MovementState.Crouching;
             desiredMoveSpeed = crouchSpeed;
         }
-        else if (grounded && controler.sprintInput)
+        else if (grounded && controler.sprintInput && !stamina.IsExhausted)
         {
             state = MovementState.Sprinting;
             desiredMoveSpeed = sprintSpeed;
             speedIncreaseMultiplier = sprintSpeedChangeFactor;
+            if (verticalInput != 0 || horizontalInput != 0)
+            {
+                stamina.Drain(sprintStaminaCost);
+            }
         }
         else if (grounded)
         {
@@ -265,7 +268,6 @@ public class PlayerMovement : MonoBehaviour
         lastState = state;
 
         if (Mathf.Abs(desiredMoveSpeed - moveSpeed) < 0.1f) keepMomentum = false;
-        if (lastState == MovementState.Dashing) keepMomentum = true;
     }
 
     private IEnumerator SmoothlyLerpMoveSpeed()
@@ -300,8 +302,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void MovePlayer()
     {
-        if (sliding || wallrunning || climbing || vaulting || activeGrapple || restricted || 
-           (climbingScript != null && climbingScript.exitingWall) || state == MovementState.Dashing || swinging) 
+        if (sliding || wallrunning || climbing || vaulting  || restricted || 
+           (climbingScript != null && climbingScript.exitingWall)) 
             return;
 
         if (orientation == null) return;
@@ -338,8 +340,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void SpeedControl()
     {
-        if (activeGrapple) return;
-
+        
         if (OnSlope() && !exitingSlope)
         {
             if (rb.linearVelocity.magnitude > moveSpeed)
@@ -367,6 +368,7 @@ public class PlayerMovement : MonoBehaviour
         exitingSlope = true;
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        lastTimeGround = -999f;
     }
 
     private void ResetJump()
@@ -375,42 +377,7 @@ public class PlayerMovement : MonoBehaviour
         exitingSlope = false;
     }
 
-    public void JumpToPosition(Vector3 targetPosition, float trajectoryHeight)
-    {
-        activeGrapple = true;
-        grappleStartTime = Time.time;
-        grappleTargetPosition = targetPosition;
-        grappleTrajectoryHeight = trajectoryHeight;
-        Invoke(nameof(SetVelocity), 0.1f);
-    }
-
-    private void SetVelocity()
-    {
-        Vector3 velocityToSet = CalculateJumpVelocity(transform.position, grappleTargetPosition, grappleTrajectoryHeight);
-        enableMovementOnNextTouch = true;
-        rb.linearVelocity = velocityToSet;
-    }
-
-    public void ResetRestrictions()
-    {
-        activeGrapple = false;
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (enableMovementOnNextTouch)
-        {
-            if (Time.time - grappleStartTime < 0.3f) return;
-
-            enableMovementOnNextTouch = false;
-            ResetRestrictions();
-
-            if (TryGetComponent<Grappling>(out var grapplingScript))
-            {
-                grapplingScript.StopGrapple();
-            }
-        }
-    }
+  
 
     public bool OnSlope()
     {
