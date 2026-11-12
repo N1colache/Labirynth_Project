@@ -9,6 +9,7 @@ public class Climbing : MonoBehaviour
     [SerializeField] private PlayerMovement pm;
     [SerializeField] private LedgeGrabbing lg;
     [SerializeField] private ControlerManager controler;
+    [SerializeField] private PlayerStamina stamina;
 
     [Header("Climbing Settings")]
     [SerializeField] private float climSpeed = 5f;
@@ -39,12 +40,16 @@ public class Climbing : MonoBehaviour
     public bool exitingWall;
     [SerializeField] private float exitingWallTime = 0.2f;
     private float exitingWallTimer;
+    
+    [SerializeField] private float climbStaminaCost = 15f;
+    [SerializeField] private float climbJumpStaminaCost = 10f;
 
     private void Start()
     {
         if (rb == null) rb = GetComponent<Rigidbody>();
         if (pm == null) pm = GetComponent<PlayerMovement>();
         if (lg == null) lg = GetComponent<LedgeGrabbing>();
+        if (stamina == null) stamina = GetComponent<PlayerStamina>();
     }
 
     private void Update()
@@ -90,7 +95,7 @@ public class Climbing : MonoBehaviour
         // 3. Escalade active
         bool canClimb = wallFront && controler != null && controler.moveInputBool && wallLookAngle < maxWallLookAngle;
 
-        if (canClimb && !exitingWall)
+        if (canClimb && !exitingWall && !stamina.IsExhausted)
         {
             if (!climbing && climTimer > 0f)
             {
@@ -100,6 +105,7 @@ public class Climbing : MonoBehaviour
             if (climTimer > 0f)
             {
                 climTimer -= Time.deltaTime;
+                stamina.Drain(climbStaminaCost);
             }
 
             if (climTimer <= 0f)
@@ -113,9 +119,10 @@ public class Climbing : MonoBehaviour
         }
 
       
-        if (wallFront && controler != null && controler.ConsumeJump() && climbJumpLeft > 0)
+        if (wallFront && controler != null && !pm.grounded && climbJumpLeft > 0 && controler.ConsumeJump() && stamina.TryConsume(climbJumpStaminaCost))
         {
             ClimbJump();
+            
         }
     }
 

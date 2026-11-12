@@ -39,11 +39,15 @@ public class WallRunning : MonoBehaviour
     [SerializeField] private CameraEffects cam;
     [SerializeField] private ControlerManager controler;
     [SerializeField] private LedgeGrabbing lg;
+    [SerializeField] private PlayerStamina stamina;
 
     private Rigidbody rb;
     private PlayerMovement pm;
     private float horizontalInput;
     private float verticalInput;
+
+    [SerializeField] private float wallRunStaminaCost = 15f;
+    [SerializeField] private float wallJumpStaminaCost = 10f;
 
     private void Start()
     {
@@ -51,6 +55,7 @@ public class WallRunning : MonoBehaviour
         if (pm == null) pm = GetComponent<PlayerMovement>();
         if (lg == null) lg = GetComponent<LedgeGrabbing>();
         if (controler == null) controler = GetComponent<ControlerManager>();
+        if (stamina == null) stamina = GetComponent<PlayerStamina>();
     }
 
     private void Update()
@@ -87,7 +92,7 @@ public class WallRunning : MonoBehaviour
         horizontalInput = controler.moveInput.x;
         verticalInput = controler.moveInput.y;
         
-        if ((wallLeft || wallRight) && verticalInput > 0f && AboveGround() && !exitingWall)
+        if ((wallLeft || wallRight) && verticalInput > 0f && AboveGround() && !exitingWall  && !stamina.IsExhausted)
         {
             if (!pm.wallrunning)
             {
@@ -108,7 +113,7 @@ public class WallRunning : MonoBehaviour
                 rb.AddForce(wallNormal * wallJumpSideForce, ForceMode.Impulse);
             }
             
-            if (controler.ConsumeJump())
+            if (!(lg != null && (lg.holding || lg.exitingLedge)) && controler.ConsumeJump() && stamina.TryConsume(wallJumpStaminaCost))
             {
                 WallJump();
             }
@@ -168,7 +173,7 @@ public class WallRunning : MonoBehaviour
         }
         
         rb.AddForce(wallForward * wallRunForce, ForceMode.Force);
-
+        stamina.Drain(wallRunStaminaCost);
         
         if (controler != null)
         {
@@ -212,6 +217,7 @@ public class WallRunning : MonoBehaviour
 
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         rb.AddForce(forceToApply, ForceMode.Impulse);
+        
     }
 
     private void OnDisable()
