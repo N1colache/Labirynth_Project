@@ -16,9 +16,11 @@ public class Sliding : MonoBehaviour
     [SerializeField] private float slideForce = 400f;
     [SerializeField] private float slideYScale = 0.5f;
     
+    
     private float slideTimer;
     private float startYScale;
     private bool slideInputPrevious;
+    private Vector3 slideDirection;
 
     private float horizontalInput;
     private float verticalInput;
@@ -41,14 +43,21 @@ public class Sliding : MonoBehaviour
 
         horizontalInput = controler.moveInput.x;
         verticalInput = controler.moveInput.y;
+        bool isSprinting = pm.state == PlayerMovement.MovementState.Sprinting;
 
         bool hasInput = horizontalInput != 0f || verticalInput != 0f;
-        bool canSlide = !pm.sliding && !pm.restricted && !pm.freeze  && hasInput && pm.grounded;
+        bool canSlide = !pm.sliding && !pm.restricted && !pm.freeze  && hasInput && pm.grounded && isSprinting;
 
         // Détection de l'appui (Front montant)
+        if (controler.slideInput)
+        {
+            Debug.Log("sprint: " + isSprinting + " | sol: " + pm.grounded + " | état: " + pm.state
+                      + " | sliding: " + pm.sliding + " | restricted: " + pm.restricted + " | freeze: " + pm.freeze);
+        }
         if (controler.slideInput && !slideInputPrevious && canSlide)
         {
             StartSlide();
+            Debug.Log("Slide");
         }
 
         // Relâchement de la touche de glissade
@@ -72,6 +81,7 @@ public class Sliding : MonoBehaviour
     {
         pm.sliding = true;
 
+        slideDirection = (orientation.forward * verticalInput + orientation.right * horizontalInput).normalized;
         if (playerObj != null)
         {
             playerObj.localScale = new Vector3(playerObj.localScale.x, slideYScale, playerObj.localScale.z);
@@ -87,12 +97,12 @@ public class Sliding : MonoBehaviour
     {
         if (orientation == null) return;
 
-        Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+       
 
         // Glissade sur sol plat ou en montée
         if (!pm.OnSlope() || rb.linearVelocity.y > -0.1f)
         {
-            rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
+            rb.AddForce(slideDirection * slideForce, ForceMode.Force);
 
             // Décompte correct du timer en FixedUpdate
             slideTimer -= Time.fixedDeltaTime;
@@ -100,7 +110,7 @@ public class Sliding : MonoBehaviour
         // Glissade en descente (prise de vitesse infinie/conservée)
         else
         {
-            rb.AddForce(pm.GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
+            rb.AddForce(pm.GetSlopeMoveDirection(slideDirection) * slideForce, ForceMode.Force);
         }
 
         if (slideTimer <= 0f)

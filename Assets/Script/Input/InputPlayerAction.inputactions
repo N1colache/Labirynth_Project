@@ -309,7 +309,7 @@
                 {
                     "name": "",
                     "id": "ccb7a327-f792-4e33-aa9e-ff19dacf71a4",
-                    "path": "<Keyboard>/c",
+                    "path": "<Keyboard>/ctrl",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -331,7 +331,7 @@
                 {
                     "name": "",
                     "id": "560e887a-1e16-4cf1-86f2-9c9d953bb840",
-                    "path": "<Keyboard>/z",
+                    "path": "<Keyboard>/q",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

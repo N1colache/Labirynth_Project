@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 
 public class Climbing : MonoBehaviour
 {
@@ -40,6 +41,8 @@ public class Climbing : MonoBehaviour
     public bool exitingWall;
     [SerializeField] private float exitingWallTime = 0.2f;
     private float exitingWallTimer;
+
+   
     
     [SerializeField] private float climbStaminaCost = 15f;
     [SerializeField] private float climbJumpStaminaCost = 10f;
@@ -122,6 +125,7 @@ public class Climbing : MonoBehaviour
         if (wallFront && controler != null && !pm.grounded && climbJumpLeft > 0 && controler.ConsumeJump() && stamina.TryConsume(climbJumpStaminaCost))
         {
             ClimbJump();
+            Debug.Log("Climbing a pris le saut");
             
         }
     }

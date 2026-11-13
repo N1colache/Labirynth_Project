@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections;
 
 public class LedgeGrabbing : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class LedgeGrabbing : MonoBehaviour
    public Transform orientation;
    public Transform cam;
    private Rigidbody rb;
+   [SerializeField] private PlayerStamina stamina;
 
    [Header("Ledge Grabbing")] 
    public float moveToLedgeSpeed;
@@ -16,8 +18,9 @@ public class LedgeGrabbing : MonoBehaviour
 
    public float minTimeOnLedge;
    private float timeOnLedge;
-
-   public bool holding;
+   private Vector3 hangPoint;
+   [SerializeField] private float hangOffset = 0.5f;
+   public bool holding{get; private set;}
    [Header("Ledge Jumping")]
    public float ledgeJumpForwardForce;
    public float ledgeJumpUpwardForce;
@@ -29,17 +32,32 @@ public class LedgeGrabbing : MonoBehaviour
    
    private Transform lastLedge;
    private Transform currentLedge;
+   private Vector3 ledgeNormal;
    
    private RaycastHit ledgeHit;
    
    [Header("Exiting")]
-   public bool exitingLedge;
+   public bool exitingLedge {get; private set;}
    public float exitLedgeTime;
    private float exitLedgeTimer;
+   
+   [Header("Mantle")] 
+   [SerializeField] private float mantleHeight;
+   [SerializeField] private float mantleForward;
+   [SerializeField] private float mantleDuration;
+   [SerializeField] private float playerHalfHeight;
+   [SerializeField] private LayerMask whatIsGround;
+   
+   [SerializeField] private float hangStaminaCost = 5f;
+   [SerializeField] private float ledgeJumpStaminaCost = 10f;
+   [SerializeField] private float shimmySpeed = 2f;
+   private float ledgeTopY;
+   [SerializeField] private float hangBelowTop = 1.2f;
 
    private void Awake()
    {
-      rb = GetComponent<Rigidbody>();
+      if (rb == null) rb = GetComponent<Rigidbody>();
+      if (stamina == null) stamina = GetComponent<PlayerStamina>();
    }
    private void Update()
    {
@@ -51,7 +69,7 @@ public class LedgeGrabbing : MonoBehaviour
    {
       float horizontalInput = controler.moveInput.x;
       float verticalInput = controler.moveInput.y;
-      bool anyInputPressed = horizontalInput != 0 || verticalInput != 0;
+      
       
       // substate 1 - holding onto ledge
       if (holding)
@@ -59,15 +77,62 @@ public class LedgeGrabbing : MonoBehaviour
          FreezeRigidbodyOnLedge();
          
          timeOnLedge += Time.deltaTime;
+         stamina.Drain(hangStaminaCost);
 
-         if (timeOnLedge > minTimeOnLedge && anyInputPressed)
+         if ( stamina.IsExhausted )
          {
             ExitLedgeHold();
+            return;
          }
 
-         if (controler.ConsumeJump())
+         if (timeOnLedge > minTimeOnLedge && controler.crouchInput)
          {
-            LedgeJump();
+            ExitLedgeHold();
+            return;
+         }
+
+         if (controler.ConsumeJump() && stamina.TryConsume(ledgeJumpStaminaCost))
+         {
+             float lookDot = Vector3.Dot(cam.forward,-ledgeNormal);
+            
+                     if (lookDot > 0.5)
+                     {
+                        Vector3 origin = transform.position + (Vector3.up * mantleHeight + (-ledgeNormal) * mantleForward);
+                        if (Physics.Raycast(origin, Vector3.down, out RaycastHit topHit, mantleHeight + 1f,
+                               whatIsGround))
+                        {
+                           ExitLedgeHold();
+                           Vector3 target = topHit.point + Vector3.up * playerHalfHeight;
+                           StartCoroutine(MantleRoutine(target));
+                           Debug.DrawRay(origin, Vector3.down * (mantleHeight + 1f), Color.green, 0.1f);
+                        }
+                        else
+                        {
+                           Debug.Log("pas de place pour se hisser");
+                        }
+                        
+                     }
+                     else
+                     {
+                        LedgeJump();
+                     }
+         }
+         if (holding && horizontalInput != 0)
+         {
+            Vector3 wallRight = Vector3.Cross(Vector3.up, -ledgeNormal);
+            Vector3 move = wallRight * horizontalInput * shimmySpeed * Time.deltaTime;
+            Vector3 nextPoint = hangPoint + move;
+            Vector3 checkPoint = nextPoint;
+            checkPoint.y = ledgeTopY - 0.1f;
+
+            Debug.Log("déplacement latéral demandé");
+            Debug.DrawRay(checkPoint, -ledgeNormal * (hangOffset + 0.3f), Color.green, 0.1f);
+            
+            if (Physics.Raycast(checkPoint, -ledgeNormal, hangOffset + 0.3f, whatIsLedge))
+            {
+               hangPoint = nextPoint;
+               transform.position += move;
+            }
          }
          // Substate 2 - Exiting Ledge
          
@@ -88,12 +153,13 @@ public class LedgeGrabbing : MonoBehaviour
       {
          return;
       }
+      if (Mathf.Abs(ledgeHit.normal.y) > 0.3f) return;
       
-      float distanceToLedge = Vector3.Distance(transform.position, ledgeHit.transform.position);
+      float distanceToLedge = Vector3.Distance(transform.position, ledgeHit.point);
       
       if(ledgeHit.transform == lastLedge) return;
       
-      if(distanceToLedge < maxLedgeGrabDistance && !holding)  EnterLedgeHold();
+      if(distanceToLedge < maxLedgeGrabDistance && !holding && controler.jumpHeld)  EnterLedgeHold();
    }
    private void LedgeJump()
    {
@@ -118,6 +184,22 @@ public class LedgeGrabbing : MonoBehaviour
       pm.restricted = true;
       
       currentLedge = ledgeHit.transform;
+      ledgeNormal = ledgeHit.normal;
+      ledgeNormal.y = 0f;
+      ledgeNormal = ledgeNormal.normalized;
+      hangPoint = ledgeHit.point + ledgeNormal * hangOffset;
+      Vector3 topOrigin = ledgeHit.point + Vector3.up * mantleHeight + (-ledgeNormal) * 0.1f;
+
+      if (Physics.Raycast(topOrigin, Vector3.down, out RaycastHit topHit, mantleHeight + 1f, whatIsGround))
+      {
+         ledgeTopY = topHit.point.y;
+         hangPoint.y = ledgeTopY - hangBelowTop;
+      }
+      else
+      {
+         ledgeTopY = ledgeHit.point.y;
+         hangPoint.y = transform.position.y;
+      }
       lastLedge = ledgeHit.transform;
       
       rb.useGravity = false;
@@ -126,12 +208,18 @@ public class LedgeGrabbing : MonoBehaviour
 
    private void FreezeRigidbodyOnLedge()
    {
+      if (currentLedge == null)
+      {
+         ExitLedgeHold();
+         return;
+      }
+         
       rb.useGravity = false;
       
-      Vector3 directionToLedge = currentLedge.position - transform.position;
-      float distanceToLedge = Vector3.Distance(transform.position, currentLedge.position);
+      Vector3 directionToLedge = hangPoint - transform.position;
+      float distanceToLedge = Vector3.Distance(transform.position, hangPoint);
 
-      if (distanceToLedge > 1f)
+      if (distanceToLedge > 0.1f)
       {
          if (rb.linearVelocity.magnitude < moveToLedgeSpeed)
          {
@@ -175,7 +263,22 @@ public class LedgeGrabbing : MonoBehaviour
    {
       lastLedge = null;
    }
-   
+   private IEnumerator MantleRoutine(Vector3 target)
+   {
+      rb.isKinematic = true;
+      Vector3 start = transform.position;
+      float t = 0f;
+
+      while (t < 1f)
+      {
+         t += Time.deltaTime / mantleDuration;
+         transform.position = Vector3.Lerp(start, target, t);
+         yield return null;
+      }
+
+      rb.isKinematic = false;
+      rb.linearVelocity = Vector3.zero;
+   }
    
    
  
