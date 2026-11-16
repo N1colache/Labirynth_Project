@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+
 
 public class Climbing : MonoBehaviour
 {
@@ -16,7 +16,7 @@ public class Climbing : MonoBehaviour
     [SerializeField] private float climSpeed = 5f;
     [SerializeField] private float maxClimTime = 2f;
     private float climTimer;
-    public bool climbing { get; private set; }
+    public bool IsClimbing { get; private set; }
 
     [Header("Climb Jumping")]
     [SerializeField] private float climJumpUpForce = 7f;
@@ -38,7 +38,7 @@ public class Climbing : MonoBehaviour
     [SerializeField] private float minWallNormalAngleChange = 15f;
 
     [Header("Exiting")]
-    public bool exitingWall;
+    public bool ExitingWall { get; private set; }
     [SerializeField] private float exitingWallTime = 0.2f;
     private float exitingWallTimer;
 
@@ -53,6 +53,7 @@ public class Climbing : MonoBehaviour
         if (pm == null) pm = GetComponent<PlayerMovement>();
         if (lg == null) lg = GetComponent<LedgeGrabbing>();
         if (stamina == null) stamina = GetComponent<PlayerStamina>();
+        if (controler == null) controler = GetComponent<ControlerManager>();
     }
 
     private void Update()
@@ -63,7 +64,7 @@ public class Climbing : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (climbing && !exitingWall)
+        if (IsClimbing && !ExitingWall)
         {
             ClimbingMovement();
         }
@@ -74,14 +75,14 @@ public class Climbing : MonoBehaviour
         // 1. Suspension à un rebord (LedgeGrabbing prioritaire)
         if (lg != null && (lg.holding || lg.exitingLedge))
         {
-            if (climbing) StopClimbing();
+            if (IsClimbing) StopClimbing();
             return;
         }
 
         // 2. En phase d'éjection (Post-ClimbJump)
-        if (exitingWall)
+        if (ExitingWall)
         {
-            if (climbing) StopClimbing();
+            if (IsClimbing) StopClimbing();
 
             if (exitingWallTimer > 0f)
             {
@@ -89,18 +90,18 @@ public class Climbing : MonoBehaviour
             }
             else
             {
-                exitingWall = false;
+                ExitingWall = false;
             }
 
             return;
         }
 
         // 3. Escalade active
-        bool canClimb = wallFront && controler != null && controler.moveInputBool && wallLookAngle < maxWallLookAngle;
+        bool canClimb =wallFront && controler != null && controler.moveInput.y > 0 && controler.jumpHeld && wallLookAngle < maxWallLookAngle;
 
-        if (canClimb && !exitingWall && !stamina.IsExhausted)
+        if (canClimb && !ExitingWall && !stamina.IsExhausted)
         {
-            if (!climbing && climTimer > 0f)
+            if (!IsClimbing && climTimer > 0f)
             {
                 StartClimbing();
             }
@@ -116,7 +117,7 @@ public class Climbing : MonoBehaviour
                 StopClimbing();
             }
         }
-        else if (climbing)
+        else if (IsClimbing)
         {
             StopClimbing();
         }
@@ -125,8 +126,6 @@ public class Climbing : MonoBehaviour
         if (wallFront && controler != null && !pm.grounded && climbJumpLeft > 0 && controler.ConsumeJump() && stamina.TryConsume(climbJumpStaminaCost))
         {
             ClimbJump();
-            Debug.Log("Climbing a pris le saut");
-            
         }
     }
 
@@ -152,7 +151,7 @@ public class Climbing : MonoBehaviour
 
     private void StartClimbing()
     {
-        climbing = true;
+        IsClimbing = true;
         if (pm != null) pm.climbing = true;
 
         rb.useGravity = false;
@@ -169,7 +168,7 @@ public class Climbing : MonoBehaviour
 
     private void StopClimbing()
     {
-        climbing = false;
+        IsClimbing = false;
         if (pm != null) pm.climbing = false;
 
         rb.useGravity = true;
@@ -180,7 +179,7 @@ public class Climbing : MonoBehaviour
         if ((pm != null && pm.grounded) || (lg != null && (lg.holding || lg.exitingLedge)))
             return;
 
-        exitingWall = true;
+        ExitingWall = true;
         exitingWallTimer = exitingWallTime;
 
         Vector3 forceToApply = transform.up * climJumpUpForce + frontWallHit.normal * climbJumpBackForce;

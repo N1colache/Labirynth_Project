@@ -5,7 +5,6 @@ public class Sliding : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Transform orientation;
-    [SerializeField] private Transform playerObj;
     [SerializeField] private ControlerManager controler;
 
     private Rigidbody rb;
@@ -14,11 +13,8 @@ public class Sliding : MonoBehaviour
     [Header("Sliding Settings")]
     [SerializeField] private float maxSlideTime = 0.75f;
     [SerializeField] private float slideForce = 400f;
-    [SerializeField] private float slideYScale = 0.5f;
-    
     
     private float slideTimer;
-    private float startYScale;
     private bool slideInputPrevious;
     private Vector3 slideDirection;
 
@@ -30,11 +26,7 @@ public class Sliding : MonoBehaviour
         if (rb == null) rb = GetComponent<Rigidbody>();
         if (pm == null) pm = GetComponent<PlayerMovement>();
         if (controler == null) controler = GetComponent<ControlerManager>();
-
-        if (playerObj != null)
-        {
-            startYScale = playerObj.localScale.y;
-        }
+        
     }
 
     private void Update()
@@ -82,14 +74,9 @@ public class Sliding : MonoBehaviour
         pm.sliding = true;
 
         slideDirection = (orientation.forward * verticalInput + orientation.right * horizontalInput).normalized;
-        if (playerObj != null)
-        {
-            playerObj.localScale = new Vector3(playerObj.localScale.x, slideYScale, playerObj.localScale.z);
-        }
-
-        // Force vers le bas pour plaquer le joueur au sol au lancement
-        rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
-
+        
+            pm.Crouch();
+            
         slideTimer = maxSlideTime;
     }
 
@@ -122,11 +109,12 @@ public class Sliding : MonoBehaviour
     private void StopSlide()
     {
         pm.sliding = false;
-
-        if (playerObj != null)
-        {
-            playerObj.localScale = new Vector3(playerObj.localScale.x, startYScale, playerObj.localScale.z);
+        
+        if (!pm.TryToUncouch())
+        { 
+            pm.crouching = true;
         }
+        
     }
 
     private void OnDisable()

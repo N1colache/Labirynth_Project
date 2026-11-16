@@ -1,4 +1,4 @@
-using System;
+
 using UnityEngine;
 using System.Collections;
 
@@ -64,12 +64,9 @@ public class LedgeGrabbing : MonoBehaviour
       LedgeDetection();
       SubStateMachine();
    }
-
    private void SubStateMachine()
    {
       float horizontalInput = controler.moveInput.x;
-      float verticalInput = controler.moveInput.y;
-      
       
       // substate 1 - holding onto ledge
       if (holding)
@@ -101,14 +98,15 @@ public class LedgeGrabbing : MonoBehaviour
                         if (Physics.Raycast(origin, Vector3.down, out RaycastHit topHit, mantleHeight + 1f,
                                whatIsGround))
                         {
+                           
                            ExitLedgeHold();
                            Vector3 target = topHit.point + Vector3.up * playerHalfHeight;
                            StartCoroutine(MantleRoutine(target));
-                           Debug.DrawRay(origin, Vector3.down * (mantleHeight + 1f), Color.green, 0.1f);
+                           
                         }
                         else
                         {
-                           Debug.Log("pas de place pour se hisser");
+                           return;
                         }
                         
                      }
@@ -124,9 +122,6 @@ public class LedgeGrabbing : MonoBehaviour
             Vector3 nextPoint = hangPoint + move;
             Vector3 checkPoint = nextPoint;
             checkPoint.y = ledgeTopY - 0.1f;
-
-            Debug.Log("déplacement latéral demandé");
-            Debug.DrawRay(checkPoint, -ledgeNormal * (hangOffset + 0.3f), Color.green, 0.1f);
             
             if (Physics.Raycast(checkPoint, -ledgeNormal, hangOffset + 0.3f, whatIsLedge))
             {
@@ -144,7 +139,6 @@ public class LedgeGrabbing : MonoBehaviour
       }
       
    }
-
    private void LedgeDetection()
    {
       bool ledgeDetected = Physics.SphereCast(transform.position, ledgeSphereCastRadius, cam.forward, out ledgeHit, ledgeDetectionLenght, whatIsLedge);
@@ -167,15 +161,12 @@ public class LedgeGrabbing : MonoBehaviour
 
       Invoke(nameof(DelayedJumpForce), 0.05f);
    }
-
    private void DelayedJumpForce()
    {
       Vector3 forceToAdd = cam.forward * ledgeJumpForwardForce + orientation.up * ledgeJumpUpwardForce;
       rb.linearVelocity = Vector3.zero;
       rb.AddForce(forceToAdd, ForceMode.Impulse);
    }
-
-
    private void EnterLedgeHold()
    {
       holding = true;
@@ -205,7 +196,6 @@ public class LedgeGrabbing : MonoBehaviour
       rb.useGravity = false;
       rb.linearVelocity = Vector3.zero;
    }
-
    private void FreezeRigidbodyOnLedge()
    {
       if (currentLedge == null)
@@ -242,7 +232,6 @@ public class LedgeGrabbing : MonoBehaviour
       
       if(distanceToLedge > maxLedgeGrabDistance) ExitLedgeHold();
    }
-
    private void ExitLedgeHold()
    {
       exitingLedge = true;
@@ -258,7 +247,6 @@ public class LedgeGrabbing : MonoBehaviour
       StopAllCoroutines();
       Invoke(nameof(ResetLastLedge), 1f);
    }
-   
    private void ResetLastLedge()
    {
       lastLedge = null;

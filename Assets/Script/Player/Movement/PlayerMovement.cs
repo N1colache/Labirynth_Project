@@ -11,7 +11,7 @@ public class PlayerMovement : MonoBehaviour
         Unlimited,
         Walking,
         Sprinting,
-        Wallrunning,
+        WallRunning,
         Climbing,
         Vaulting,
         Crouching,
@@ -20,7 +20,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     [Header("References")]
-    [SerializeField] private ControlerManager controler;
+    [SerializeField] private ControlerManager cm;
     [SerializeField] private Climbing climbingScript;
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
@@ -66,6 +66,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float maxSlopeAngle = 40f;
     [SerializeField] private float playerHeight = 2f;
     [SerializeField] private LayerMask whatIsGround;
+    [SerializeField] private float sphereCastRadius = 0.4f;
     public bool grounded;
     private RaycastHit slopeHit;
     private bool exitingSlope;
@@ -78,7 +79,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Action Flags")]
     public bool sliding;
     public bool crouching;
-    public bool wallrunning;
+    public bool wallRunning;
     public bool climbing;
     public bool vaulting;
     public bool freeze;
@@ -111,7 +112,7 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         // Ground Check
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
+        grounded = Physics.SphereCast(transform.position, sphereCastRadius,Vector3.down,out RaycastHit groundHit,playerHeight  / 2 +0.3f - sphereCastRadius ,whatIsGround);
         
         if(grounded)
             lastTimeGround = Time.time;
@@ -136,10 +137,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void MyInput()
     {
-        if (restricted || controler == null) return; 
+        if (restricted || cm == null) return; 
 
-        horizontalInput = controler.moveInput.x;
-        verticalInput = controler.moveInput.y;
+        horizontalInput = cm.moveInput.x;
+        verticalInput = cm.moveInput.y;
         bool canStillJump;
         if(grounded || Time.time - lastTimeGround < coyoteTime)
         {
@@ -150,9 +151,18 @@ public class PlayerMovement : MonoBehaviour
             canStillJump = false;
         }
 
+        if (crouching && grounded && cm.ConsumeJump())
+        {
+            if(TryToUncouch())
+            {
+                crouching = false;
+                
+            }
+        }
+
 
         // Saut
-        if (  readyToJump && canStillJump && controler.ConsumeJump()) 
+        if (  readyToJump && canStillJump && !crouching && cm.ConsumeJump() ) 
         {
             readyToJump = false;
             Jump();
@@ -160,22 +170,27 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Crouch (Toggle)
-        if (controler.crouchInput)
+        if (cm.crouchInput)
         {
-            crouching = !crouching;
 
-            if (crouching)
+            if (grounded)
             {
-                transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
-                rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+                 if (!crouching)
+                 {
+                     crouching = true;
+                     Crouch();
+                 }
+                 else
+                 {
+                     if(TryToUncouch())
+                     {
+                         crouching = false;
+                     }
+                 }
             }
-            else
-            {
-                transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
-            }
-
-            // Réinitialise l'entrée pour éviter un déclenchement en boucle
-            controler.crouchInput = false; 
+            
+            cm.crouchInput = false; 
+            
         }
     }
 
@@ -203,9 +218,9 @@ public class PlayerMovement : MonoBehaviour
             state = MovementState.Climbing;
             desiredMoveSpeed = climSpeed;
         }
-        else if (wallrunning)
+        else if (wallRunning)
         {
-            state = MovementState.Wallrunning;
+            state = MovementState.WallRunning;
             desiredMoveSpeed = wallRunSpeed;
             speedIncreaseMultiplier = wallRunSpeedChangeFactor;
         }
@@ -224,12 +239,12 @@ public class PlayerMovement : MonoBehaviour
                 desiredMoveSpeed = sprintSpeed;
             }
         }
-        else if (crouching)
+        else if (crouching && grounded)
         {
             state = MovementState.Crouching;
             desiredMoveSpeed = crouchSpeed;
         }
-        else if (grounded && controler.sprintInput && !stamina.IsExhausted)
+        else if (grounded && cm.sprintInput && !stamina.IsExhausted)
         {
             state = MovementState.Sprinting;
             desiredMoveSpeed = sprintSpeed;
@@ -302,8 +317,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void MovePlayer()
     {
-        if (sliding || wallrunning || climbing || vaulting  || restricted || 
-           (climbingScript != null && climbingScript.exitingWall)) 
+        if (sliding || wallRunning || climbing || vaulting  || restricted || 
+           (climbingScript != null && climbingScript.ExitingWall)) 
             return;
 
         if (orientation == null) return;
@@ -332,7 +347,7 @@ public class PlayerMovement : MonoBehaviour
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
         }
 
-        if (!wallrunning)
+        if (!wallRunning)
         {
             rb.useGravity = !OnSlope();
         }
@@ -394,19 +409,7 @@ public class PlayerMovement : MonoBehaviour
     {
         return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
     }
-
-    public Vector3 CalculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight)
-    {
-        float gravity = Physics.gravity.y;
-        float displacementY = endPoint.y - startPoint.y;
-        Vector3 displacementXZ = new Vector3(endPoint.x - startPoint.x, 0f, endPoint.z - startPoint.z);
-
-        Vector3 velocityY = Vector3.up * Mathf.Sqrt(-2f * gravity * trajectoryHeight);
-        Vector3 velocityXZ = displacementXZ / (Mathf.Sqrt(-2f * trajectoryHeight / gravity) + Mathf.Sqrt(2f * (displacementY - trajectoryHeight) / gravity));
-
-        return velocityY + velocityXZ;
-    }
-
+    
     private void UpdateUI()
     {
         if (text_speed != null)
@@ -425,5 +428,24 @@ public class PlayerMovement : MonoBehaviour
     {
         float mult = Mathf.Pow(10.0f, digits);
         return Mathf.Round(value * mult) / mult;
+    }
+
+    public void Crouch()
+    {
+        transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+        rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
+    }
+    
+    public bool TryToUncouch()
+    {
+        if (Physics.Raycast(transform.position, Vector3.up, 0.75f * playerHeight, whatIsGround))
+        {
+            return false;
+        }
+        else
+        {
+            transform.localScale = new Vector3(transform.localScale.x,startYScale,transform.localScale.z);
+            return true;
+        }
     }
 }

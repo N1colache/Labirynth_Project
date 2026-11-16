@@ -19,6 +19,8 @@ public class WallRunning : MonoBehaviour
     private RaycastHit rightWallHit;
     private bool wallLeft;
     private bool wallRight;
+    private Vector3 lastWallNormal;
+    private bool hasWall;
 
     [Header("Exiting Wall")]
     [SerializeField] private float exitWallTime = 0.2f;
@@ -62,11 +64,13 @@ public class WallRunning : MonoBehaviour
     {
         CheckForWall();
         StateMachine();
+        
+        if(pm.grounded)  hasWall = false;
     }
 
     private void FixedUpdate()
     {
-        if (pm != null && pm.wallrunning)
+        if (pm != null && pm.wallRunning)
         {
             WallRunMovement();
         }
@@ -91,10 +95,13 @@ public class WallRunning : MonoBehaviour
 
         horizontalInput = controler.moveInput.x;
         verticalInput = controler.moveInput.y;
+        Vector3 currentWallNormal = wallRight ? rightWallHit.normal : leftWallHit.normal;
+        bool sameWall = false;
+        if(hasWall && Vector3.Dot(currentWallNormal, lastWallNormal) > 0.9) sameWall = true;
         
-        if ((wallLeft || wallRight) && verticalInput > 0f && AboveGround() && !exitingWall  && !stamina.IsExhausted)
+        if ((wallLeft || wallRight) && verticalInput > 0f && AboveGround() && !exitingWall  && !stamina.IsExhausted && !sameWall)
         {
-            if (!pm.wallrunning)
+            if (!pm.wallRunning)
             {
                 StartWallRun();
             }
@@ -104,12 +111,14 @@ public class WallRunning : MonoBehaviour
                 wallRunTimer -= Time.deltaTime;
             }
             
-            if (wallRunTimer <= 0f && pm.wallrunning)
+            if (wallRunTimer <= 0f && pm.wallRunning)
             {
                 exitingWall = true;
                 exitWallTimer = exitWallTime;
-
+                
                 Vector3 wallNormal = wallRight ? rightWallHit.normal : leftWallHit.normal;
+                lastWallNormal = wallNormal;
+                hasWall = true;
                 rb.AddForce(wallNormal * wallJumpSideForce, ForceMode.Impulse);
             }
             
@@ -121,7 +130,7 @@ public class WallRunning : MonoBehaviour
         
         else if (exitingWall)
         {
-            if (pm.wallrunning)
+            if (pm.wallRunning)
             {
                 StopWallRun();
             }
@@ -138,7 +147,7 @@ public class WallRunning : MonoBehaviour
         
         else
         {
-            if (pm.wallrunning)
+            if (pm.wallRunning)
             {
                 StopWallRun();
             }
@@ -147,7 +156,7 @@ public class WallRunning : MonoBehaviour
 
     private void StartWallRun()
     {
-        pm.wallrunning = true;
+        pm.wallRunning = true;
         wallRunTimer = maxWallRunTime;
 
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
@@ -155,8 +164,8 @@ public class WallRunning : MonoBehaviour
         if (cam != null)
         {
             cam.DoFov(wallRunFov);
-            if (wallLeft) cam.DoTilt(tiltAngle);
-            if (wallRight) cam.DoTilt(-tiltAngle);
+            if (wallLeft) cam.DoTilt(-tiltAngle);
+            if (wallRight) cam.DoTilt(tiltAngle);
         }
     }
 
@@ -196,7 +205,7 @@ public class WallRunning : MonoBehaviour
 
     private void StopWallRun()
     {
-        pm.wallrunning = false;
+        pm.wallRunning = false;
 
         if (cam != null)
         {
@@ -213,6 +222,8 @@ public class WallRunning : MonoBehaviour
         exitWallTimer = exitWallTime;
 
         Vector3 wallNormal = wallRight ? rightWallHit.normal : leftWallHit.normal;
+        lastWallNormal = wallNormal;
+        hasWall = true;
         Vector3 forceToApply = transform.up * wallJumpForce + wallNormal * wallJumpSideForce;
 
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
@@ -222,7 +233,7 @@ public class WallRunning : MonoBehaviour
 
     private void OnDisable()
     {
-        if (pm != null && pm.wallrunning)
+        if (pm != null && pm.wallRunning)
         {
             StopWallRun();
         }

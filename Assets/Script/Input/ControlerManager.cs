@@ -1,5 +1,4 @@
 
-using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -16,7 +15,6 @@ public class ControlerManager : MonoBehaviour
 
      // Variable
      public Vector2 moveInput;
-     public bool moveInputBool;
      public bool jumpHeld;
      private bool jumpPending;
      public bool sprintInput;
@@ -24,10 +22,10 @@ public class ControlerManager : MonoBehaviour
      public bool slideInput;
      public bool upwardsRunning ;
      public bool downwardsRunning;
-     public event Action<bool> OnCrouchChanged;
      
      [SerializeField] private float jumpBufferTime = 0.15f;
      private float lastJumpPressTime;
+     public float LastCrouchPressTime{ get; private set; }
     
      private void OnMovement(InputValue value)
      {
@@ -42,7 +40,6 @@ public class ControlerManager : MonoBehaviour
              jumpPending = true;
              lastJumpPressTime = Time.time;
          }
-         Debug.Log("onJump" + value.isPressed);
      }
 
      public bool ConsumeJump()
@@ -75,7 +72,11 @@ public class ControlerManager : MonoBehaviour
      private void OnCrouch(InputValue value)
      {
          crouchInput = value.isPressed;
-         OnCrouchChanged?.Invoke(crouchInput);
+         if(value.isPressed == true)
+         {
+            
+             LastCrouchPressTime = Time.time;
+         }
      }
 
      private void OnSlide(InputValue value)
@@ -108,14 +109,6 @@ public class ControlerManager : MonoBehaviour
         
         
      }
-
-     private void OnClimbing(InputValue value)
-     {
-         moveInputBool = value.isPressed;
-     }
-     
-     
-     
     #endregion
 
     #region Aiming & Looking
