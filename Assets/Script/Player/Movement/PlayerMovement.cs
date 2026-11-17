@@ -16,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
         Vaulting,
         Crouching,
         Sliding,
+        Balancing,
         Air
     }
 
@@ -25,6 +26,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
     [SerializeField] private PlayerStamina stamina;
+    [SerializeField] private Balancing balancing;
 
     [Header("Movement Speeds")]
     [SerializeField] private float walkSpeed = 7f;
@@ -34,6 +36,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float climSpeed = 5f;
     [SerializeField] private float vaultSpeed = 10f;
     [SerializeField] private float crouchSpeed = 3.5f;
+    [SerializeField] private float balancingSpeed = 2.5f;
     public float maxYSpeed;
 
     private float moveSpeed;
@@ -102,6 +105,7 @@ public class PlayerMovement : MonoBehaviour
     private void Start()
     {
         if (rb == null) rb = GetComponent<Rigidbody>();
+        if (balancing == null) balancing = GetComponent<Balancing>();
         
         rb.freezeRotation = true;
         readyToJump = true;
@@ -124,7 +128,7 @@ public class PlayerMovement : MonoBehaviour
         UpdateUI();
 
         // Application du Drag selon le sol et l'état
-        if ((state == MovementState.Walking || state == MovementState.Sprinting || state == MovementState.Crouching) )
+        if (state == MovementState.Walking || state == MovementState.Sprinting || state == MovementState.Crouching || state == MovementState.Balancing )
             rb.linearDamping = groundDrag;
         else
             rb.linearDamping = 0f;
@@ -162,7 +166,7 @@ public class PlayerMovement : MonoBehaviour
 
 
         // Saut
-        if (  readyToJump && canStillJump && !crouching && cm.ConsumeJump() ) 
+        if (  !rb.isKinematic && readyToJump && canStillJump && !crouching && cm.ConsumeJump() ) 
         {
             readyToJump = false;
             Jump();
@@ -238,6 +242,11 @@ public class PlayerMovement : MonoBehaviour
             {
                 desiredMoveSpeed = sprintSpeed;
             }
+        }
+        else if (balancing.IsBalancing)
+        {
+            state = MovementState.Balancing;
+            desiredMoveSpeed = balancingSpeed;
         }
         else if (crouching && grounded)
         {
@@ -325,6 +334,13 @@ public class PlayerMovement : MonoBehaviour
 
         // Calcule la direction du mouvement par rapport à l'orientation
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
+
+        if (balancing.IsBalancing)
+        {
+            float facing = Vector3.Dot(orientation.forward, balancing.BeamDirection);
+            Vector3 walkDirection = facing >= 0 ? balancing.BeamDirection  : - balancing.BeamDirection;
+            moveDirection = walkDirection * verticalInput;
+        }
 
         // Déplacement sur une pente
         if (OnSlope() && !exitingSlope)

@@ -9,6 +9,8 @@ public class Vaulting : MonoBehaviour
     [SerializeField] private ControlerManager cm;
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
+    [SerializeField] private PlayerStamina stamina;
+    [SerializeField] private Balancing balancing;
 
     [Header("VaultingSettings")] 
     [SerializeField] private float distanceFrontPlayer;
@@ -24,31 +26,75 @@ public class Vaulting : MonoBehaviour
     [SerializeField] private float exitSpeed;
     [SerializeField] private float playerHalfHeight;
     [SerializeField] private float clearance;
+    [SerializeField] private float singlePassage = 5f;
+    [SerializeField] private float strideJump = 5f;
 
-    private  List<Vector3> stridePoints = new List<Vector3>();
+    [Header("StrideSettings")] 
+    private  List<Vector3> StridePoints = new List<Vector3>();
     [SerializeField] private float maxDistance = 2f;
     [SerializeField] private float strideHopDuration = 2f;
     [SerializeField] private float strideClearance = 2f;
     [SerializeField] private int numberMaxObstacle = 5;
+    
     private Vector3 top; 
     private Vector3 destination;
     private bool obstacleLow;
     private bool obstacleHigh;
+    public bool perched{ get; private set; }
     private void Start()
     {
         if (pm == null) pm = GetComponent<PlayerMovement>();
         if (cm == null) cm = GetComponent<ControlerManager>();
         if (rb == null) rb = GetComponent<Rigidbody>();
+        if (stamina == null) stamina = GetComponent<PlayerStamina>();
+        if (balancing == null) balancing = GetComponent<Balancing>();
     }
-
-    // Update is called once per frame
+    
     void Update()
     {
+        
+        if (perched && cm.crouchInput)
+        {
+            perched = false;
+            pm.restricted = false;
+            rb.isKinematic = false;
+            cm.crouchInput = false;
+            return;
+        }
+
+        if (perched && balancing.OnBeam && cm.moveInput.y > 0)
+        {
+            perched = false;
+            pm.restricted = false;
+            rb.isKinematic = false;
+            return;
+        }
         if (pm.grounded && cm.moveInput.y > 0 && cm.jumpHeld && !pm.vaulting)
         {
+            bool onWall = Physics.Raycast( transform.position, Vector3.down,  out RaycastHit feetHit, playerHalfHeight  +  0.3f, whatIsVaulting );
             obstacleLow = Physics.Raycast(transform.position + Vector3.up * lowerRayHeight, orientation.forward, out RaycastHit lowerHit, distanceFrontPlayer , whatIsVaulting);
             obstacleHigh =  Physics.Raycast(transform.position + Vector3.up * topRayHeight, orientation.forward, distanceFrontPlayer , whatIsVaulting);
+            bool sprint = pm.state == PlayerMovement.MovementState.Sprinting;
+            bool canStride = false;
 
+            if (onWall && (sprint || balancing.OnBeam && cm.sprintInput && !stamina.IsExhausted))
+            {
+                StridePoints.Clear();
+                Vector3 lastWall  = FindNextWalls(feetHit.point);
+                bool groundAfter = Physics.Raycast(lastWall + (orientation.forward * lengthObstacle) + (Vector3.up * 2),
+                    Vector3.down, out RaycastHit endHit, 4f, whatIsGround | whatIsVaulting);
+                if (groundAfter && endHit.point.y < lastWall.y - 0.3f)
+                {
+                    StridePoints.Add(endHit.point);
+                }
+
+                if (StridePoints.Count >  0)
+                {
+                    StartCoroutine(StrideRoutine(StridePoints));
+                }
+                return;
+            }
+                
             if (obstacleLow && !obstacleHigh)
             {
                 if (Physics.Raycast(lowerHit.point + (orientation.forward * 0.2f) + (Vector3.up * 2),Vector3.down , out RaycastHit obstacleHit,2.5f , whatIsVaulting))
@@ -59,31 +105,17 @@ public class Vaulting : MonoBehaviour
                 {
                     return;
                 }
-                stridePoints.Clear();
+                StridePoints.Clear();
                 Vector3 currentWall = top;
-                stridePoints.Add(top);
-                bool sprint = pm.state == PlayerMovement.MovementState.Sprinting;
+                StridePoints.Add(top);
+               
                 if(sprint)
                 {
-                     for(int i = 0; i <numberMaxObstacle; i++)
-                     {
-                         bool touchWall = Physics.Raycast(currentWall + (Vector3.down * 0.2f), 	orientation.forward, out RaycastHit nextHit, maxDistance, whatIsVaulting);
-                         if (!touchWall) break;
-                         if (Physics.Raycast(nextHit.point + (orientation.forward * 0.2f) + (Vector3.up * 2), Vector3.down, out RaycastHit nextTopHit, 2.5f, whatIsVaulting))
-                         {
-                             stridePoints.Add(nextTopHit.point);
-                             currentWall = nextTopHit.point;
-                         }
-                         else 
-                         { 
-                             break;
-                         }
-                                        
-                     }
+                    currentWall = FindNextWalls(top);
                 }
                
-                int wallCount =  stridePoints.Count;
-                //Debug.Log(stridePoints.Count);
+                int wallCount =  StridePoints.Count;
+                //Debug.Log(StridePoints.Count);
                 
                 bool groundBehind = Physics.Raycast(currentWall + (orientation.forward * lengthObstacle) + (Vector3.up * 2), Vector3.down, out RaycastHit backHit, 4f, whatIsGround | whatIsVaulting);
                 
@@ -92,7 +124,7 @@ public class Vaulting : MonoBehaviour
                 {
                     
                     destination = backHit.point;
-                    stridePoints.Add(backHit.point);
+                    StridePoints.Add(backHit.point);
                     
                 }
                 else
@@ -107,11 +139,15 @@ public class Vaulting : MonoBehaviour
                 
                 if (wallCount >= 2)
                 {
-                    StartCoroutine(StrideRoutine(stridePoints));
+                    StartCoroutine(StrideRoutine(StridePoints));
                 }
                 else
                 {
-                     StartCoroutine(VaultRoutine(transform.position, summit, end));
+                    if (stamina.TryConsume(singlePassage))
+                    {
+                        StartCoroutine(VaultRoutine(transform.position, summit, end));
+                    }
+                     
                 }
                 
                
@@ -143,32 +179,51 @@ public class Vaulting : MonoBehaviour
     {
         rb.isKinematic = true;
         pm.vaulting = true;
+        perched = false;
+        pm.restricted = false;
         
         Vector3 currentPosition = transform.position;
         bool stop = false;
+        int numberJump = 0;
         
         foreach (Vector3 point in stride)
         {
+            if (point != stride[stride.Count -1] && !stamina.TryConsume(strideJump))
+            {
+                stop = true;
+                break;
+            }
+            
             Vector3 end = point + Vector3.up * playerHalfHeight;
             Vector3 summit = Vector3.Lerp(currentPosition, end, 0.5f ) + Vector3.up *  strideClearance;
             yield return StartCoroutine(ArcMove(currentPosition, summit, end, strideHopDuration));
+            numberJump++;
 
             currentPosition = end;
-            if (cm.moveInput.y <= 0)
+            if (point != stride[stride.Count - 1] && cm.moveInput.y <= 0)
             {
                 stop = true;
                 break;
             }
         }
         
-        rb.isKinematic = false;
-        if (stop)
+        
+        if (stop && numberJump > 0)
         {
-            rb.linearVelocity = Vector3.zero;
+            pm.restricted = true;
+            perched = true;
         }
-        else
+        else 
         {
-             rb.linearVelocity = orientation.forward * exitSpeed;
+            rb.isKinematic = false;
+            if (stop)
+            {
+                rb.linearVelocity = Vector3.zero;
+            }
+            else
+            {
+                rb.linearVelocity = orientation.forward * exitSpeed;
+            }
         }
        
         pm.vaulting = false;
@@ -185,5 +240,26 @@ public class Vaulting : MonoBehaviour
             transform.position = Vector3.Lerp(lerp1, lerp2, t);
             yield return null;
         }
+    }
+
+    private Vector3 FindNextWalls(Vector3 startPoint)
+    {
+        Vector3 currentWall = startPoint;
+        for(int i = 0; i <numberMaxObstacle; i++)
+        {
+            bool touchWall = Physics.Raycast(currentWall + (Vector3.down * 0.2f), 	orientation.forward, out RaycastHit nextHit, maxDistance, whatIsVaulting);
+            if (!touchWall) break;
+            if (Physics.Raycast(nextHit.point + (orientation.forward * 0.2f) + (Vector3.up * 2), Vector3.down, out RaycastHit nextTopHit, 2.5f, whatIsVaulting))
+            {
+                StridePoints.Add(nextTopHit.point);
+                currentWall = nextTopHit.point;
+            }
+            else 
+            { 
+                break;
+            }
+                                        
+        }
+        return currentWall;
     }
 }

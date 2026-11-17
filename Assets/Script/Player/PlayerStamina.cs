@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerStamina : MonoBehaviour
 {
-    [SerializeField] private float maxStamina = 100f;
+    [SerializeField] public float maxStamina = 100f;
     [SerializeField] private float regenPerSecond = 25f;
     [SerializeField] private float regenDelay = 0.8f;
     [SerializeField] private float exhaustedThreshold = 25f;

@@ -84,6 +84,7 @@ public class LedgeGrabbing : MonoBehaviour
 
          if (timeOnLedge > minTimeOnLedge && controler.crouchInput)
          {
+            controler.crouchInput = false;
             ExitLedgeHold();
             return;
          }
