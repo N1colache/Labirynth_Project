@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7292720722254285736}
   - component: {fileID: 80507470995939258}
   - component: {fileID: 620052007727206708}
-  m_Layer: 6
+  m_Layer: 3
   m_Name: PlayerObj
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -124,12 +124,18 @@ GameObject:
   m_Component:
   - component: {fileID: 5799466779162394311}
   - component: {fileID: 7490419956704284297}
+  - component: {fileID: 4454829970716054779}
   - component: {fileID: 111023161251497732}
   - component: {fileID: 4000733282375217137}
   - component: {fileID: 7755739056735601987}
   - component: {fileID: 859557149092648199}
   - component: {fileID: 2542610891776917845}
-  m_Layer: 6
+  - component: {fileID: 8166359975310820306}
+  - component: {fileID: 8378398091212186195}
+  - component: {fileID: 714490655174435723}
+  - component: {fileID: 7306360779848159086}
+  - component: {fileID: 8757587810558888311}
+  m_Layer: 3
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -145,7 +151,7 @@ Transform:
   m_GameObject: {fileID: 5063575984513586665}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 14, z: 0}
+  m_LocalPosition: {x: -3, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -181,6 +187,36 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 0
   m_CollisionDetection: 1
+--- !u!114 &4454829970716054779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
+  m_Actions: {fileID: -944628639613478452, guid: ca5983dac6f6ba341addc5fb14759819, type: 3}
+  m_NotificationBehavior: 0
+  m_UIInputModule: {fileID: 0}
+  m_DeviceLostEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_DeviceRegainedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ControlsChangedEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  m_ActionEvents: []
+  m_NeverAutoSwitchControlSchemes: 0
+  m_DefaultControlScheme: 
+  m_DefaultActionMap: Player
+  m_SplitScreenIndex: -1
+  m_Camera: {fileID: 0}
 --- !u!114 &111023161251497732
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -194,7 +230,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ControlerManager
   moveInput: {x: 0, y: 0}
-  moveInputBool: 0
   jumpHeld: 0
   sprintInput: 0
   crouchInput: 0
@@ -218,18 +253,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64d8dd71b052fc148abc36f992bc8266, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  controler: {fileID: 111023161251497732}
+  cm: {fileID: 111023161251497732}
   climbingScript: {fileID: 2542610891776917845}
   rb: {fileID: 7490419956704284297}
   orientation: {fileID: 4158331847142779515}
-  stamina: {fileID: 0}
-  walkSpeed: 7
-  sprintSpeed: 15
+  stamina: {fileID: 8378398091212186195}
+  balancing: {fileID: 8757587810558888311}
+  walkSpeed: 4
+  sprintSpeed: 8
   slideSpeed: 30
-  wallRunSpeed: 8.5
+  wallRunSpeed: 6
   climSpeed: 3
   vaultSpeed: 3
   crouchSpeed: 3.5
+  balancingSpeed: 2.5
   maxYSpeed: 15
   sprintStaminaCost: 12
   slopeIncreaseMultiplier: 2.5
@@ -245,14 +282,14 @@ MonoBehaviour:
   playerHeight: 2
   whatIsGround:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 576
   sphereCastRadius: 0.4
   grounded: 0
   state: 0
   lastState: 0
   sliding: 0
   crouching: 0
-  wallrunning: 0
+  wallRunning: 0
   climbing: 0
   vaulting: 0
   freeze: 0
@@ -275,10 +312,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WallRunning
   whatIsWall:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   whatIsGround:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 576
   wallRunForce: 200
   wallJumpForce: 8
   wallJumpSideForce: 7
@@ -288,17 +325,17 @@ MonoBehaviour:
   minJumpHeight: 2
   exitWallTime: 0.2
   useGravity: 1
-  gravityCounterForce: 7.16
+  gravityCounterForce: 10
   wallRunFov: 90
   normalFov: 80
   tiltAngle: 10
   orientation: {fileID: 4158331847142779515}
   cam: {fileID: 0}
   controler: {fileID: 111023161251497732}
-  lg: {fileID: 0}
-  stamina: {fileID: 0}
-  wallRunStaminaCost: 15
-  wallJumpStaminaCost: 10
+  lg: {fileID: 8166359975310820306}
+  stamina: {fileID: 8378398091212186195}
+  wallRunStaminaCost: 25
+  wallJumpStaminaCost: 40
 --- !u!114 &859557149092648199
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -331,24 +368,167 @@ MonoBehaviour:
   rb: {fileID: 7490419956704284297}
   whatIsWall:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   pm: {fileID: 4000733282375217137}
-  lg: {fileID: 0}
+  lg: {fileID: 8166359975310820306}
   controler: {fileID: 111023161251497732}
-  stamina: {fileID: 0}
-  climSpeed: 10
-  maxClimTime: 0.75
-  climJumpUpForce: 18
-  climbJumpBackForce: 6
+  stamina: {fileID: 8378398091212186195}
+  climSpeed: 5
+  maxClimTime: 0.7
+  climJumpUpForce: 7
+  climbJumpBackForce: 12
   climbJumps: 1
   detectionLenght: 0.7
   sphereCastRadius: 0.25
   maxWallLookAngle: 30
-  minWallNormalAngleChange: 5
-  exitingWall: 0
+  minWallNormalAngleChange: 17
   exitingWallTime: 0.2
   climbStaminaCost: 15
   climbJumpStaminaCost: 10
+--- !u!114 &8166359975310820306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a505c43d5187aae4a8257d6f40e8f30a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LedgeGrabbing
+  pm: {fileID: 4000733282375217137}
+  controler: {fileID: 111023161251497732}
+  orientation: {fileID: 4158331847142779515}
+  cam: {fileID: 0}
+  stamina: {fileID: 8378398091212186195}
+  moveToLedgeSpeed: 5
+  maxLedgeGrabDistance: 15
+  minTimeOnLedge: 0.2
+  hangOffset: 0.5
+  ledgeJumpForwardForce: 5
+  ledgeJumpUpwardForce: 5
+  ledgeDetectionLenght: 1.5
+  ledgeSphereCastRadius: 0.5
+  whatIsLedge:
+    serializedVersion: 2
+    m_Bits: 256
+  exitLedgeTime: 0.2
+  mantleHeight: 1.5
+  mantleForward: 0.6
+  mantleDuration: 0.3
+  playerHalfHeight: 1
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 320
+  hangStaminaCost: 5
+  ledgeJumpStaminaCost: 10
+  shimmySpeed: 2
+  hangBelowTop: 0.5
+--- !u!114 &8378398091212186195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0489e52a57782aa4a8c30fe974491248, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStamina
+  maxStamina: 100
+  regenPerSecond: 25
+  regenDelay: 0.8
+  exhaustedThreshold: 25
+--- !u!114 &714490655174435723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f476e5ca52a1cf409360c6886a16dcb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LandingRoll
+  pm: {fileID: 4000733282375217137}
+  cm: {fileID: 0}
+  rb: {fileID: 7490419956704284297}
+  orientation: {fileID: 4158331847142779515}
+  cam: {fileID: 0}
+  minFallHeight: 4
+  lapsTimeCrouchInput: 0.3
+  rollTime: 0.5
+  rollStrength: 5
+  timeStuck: 0.3
+  hardLandingTime: 0.6
+--- !u!114 &7306360779848159086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d41075c40af88a147a595a1ba41c3b0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vaulting
+  pm: {fileID: 4000733282375217137}
+  cm: {fileID: 111023161251497732}
+  rb: {fileID: 7490419956704284297}
+  orientation: {fileID: 4158331847142779515}
+  stamina: {fileID: 8378398091212186195}
+  balancing: {fileID: 8757587810558888311}
+  distanceFrontPlayer: 1
+  lowerRayHeight: -0.5
+  topRayHeight: 0.6
+  whatIsVaulting:
+    serializedVersion: 2
+    m_Bits: 512
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 64
+  lengthObstacle: 1.5
+  vaultDuration: 0.4
+  exitSpeed: 7
+  playerHalfHeight: 1
+  clearance: 0.5
+  singlePassage: 5
+  strideJump: 5
+  maxDistance: 2
+  strideHopDuration: 0.25
+  strideClearance: 0.4
+  numberMaxObstacle: 5
+--- !u!114 &8757587810558888311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27d9093facc9ff043a781cd7843628ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Balancing
+  pm: {fileID: 4000733282375217137}
+  cm: {fileID: 111023161251497732}
+  rb: {fileID: 7490419956704284297}
+  stamina: {fileID: 8378398091212186195}
+  vaulting: {fileID: 7306360779848159086}
+  orientation: {fileID: 4158331847142779515}
+  camEffects: {fileID: 0}
+  rayDiscrepancy: 0.4
+  rayLength: 1.3
+  speedOscillation: 1.3
+  maxAngle: 3
+  whatIsVaulting:
+    serializedVersion: 2
+    m_Bits: 512
+  centerStreaght: 5
 --- !u!1 &8551438938099854651
 GameObject:
   m_ObjectHideFlags: 0
@@ -358,7 +538,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 910537548259975822}
-  m_Layer: 6
+  m_Layer: 3
   m_Name: CameraPosition
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -389,7 +569,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4158331847142779515}
-  m_Layer: 6
+  m_Layer: 3
   m_Name: Orientation
   m_TagString: Player
   m_Icon: {fileID: 0}

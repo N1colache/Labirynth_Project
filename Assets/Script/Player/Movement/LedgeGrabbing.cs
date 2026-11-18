@@ -53,6 +53,8 @@ public class LedgeGrabbing : MonoBehaviour
    [SerializeField] private float shimmySpeed = 2f;
    private float ledgeTopY;
    [SerializeField] private float hangBelowTop = 1.2f;
+   [SerializeField] private float maxPullTime = 0.5f;
+   private float pullTimer;
 
    private void Awake()
    {
@@ -72,7 +74,10 @@ public class LedgeGrabbing : MonoBehaviour
       if (holding)
       {
          FreezeRigidbodyOnLedge();
-         
+         if (!holding)
+         {
+            return;
+         }
          timeOnLedge += Time.deltaTime;
          stamina.Drain(hangStaminaCost);
 
@@ -154,7 +159,7 @@ public class LedgeGrabbing : MonoBehaviour
       
       if(ledgeHit.transform == lastLedge) return;
       
-      if(distanceToLedge < maxLedgeGrabDistance && !holding && controler.jumpHeld)  EnterLedgeHold();
+      if(distanceToLedge < maxLedgeGrabDistance && !holding && controler.jumpHeld && !pm.IsBusy)  EnterLedgeHold();
    }
    private void LedgeJump()
    {
@@ -170,6 +175,8 @@ public class LedgeGrabbing : MonoBehaviour
    }
    private void EnterLedgeHold()
    {
+      pullTimer = 0f;
+      
       holding = true;
 
       pm.unlimited = true;
@@ -209,16 +216,24 @@ public class LedgeGrabbing : MonoBehaviour
       
       Vector3 directionToLedge = hangPoint - transform.position;
       float distanceToLedge = Vector3.Distance(transform.position, hangPoint);
-
-      if (distanceToLedge > 0.1f)
+      float seuil = Mathf.Max(0.1f, moveToLedgeSpeed * Time.deltaTime);
+      
+      if (distanceToLedge > seuil)
       {
-         if (rb.linearVelocity.magnitude < moveToLedgeSpeed)
+        
+         rb.linearVelocity = (directionToLedge.normalized * moveToLedgeSpeed);
+         pullTimer += Time.deltaTime;
+         if (pullTimer > maxPullTime)
          {
-            rb.AddForce(directionToLedge.normalized * moveToLedgeSpeed * 1000f * Time.deltaTime);
+            ExitLedgeHold();
+            return;
          }
+
       }
       else
       {
+         transform.position = hangPoint;
+         rb.linearVelocity = Vector3.zero;
          
             if (!pm.freeze)
             {
@@ -243,8 +258,13 @@ public class LedgeGrabbing : MonoBehaviour
       
       pm.restricted = false;
       pm.freeze = false;
+      pm.unlimited = false;
       
       rb.useGravity = true;
+      if (rb.isKinematic == false)
+      {
+         rb.linearVelocity = Vector3.zero;
+      }
       StopAllCoroutines();
       Invoke(nameof(ResetLastLedge), 1f);
    }

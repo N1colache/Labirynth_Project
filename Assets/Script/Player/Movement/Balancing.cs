@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 public class Balancing : MonoBehaviour
@@ -10,16 +9,22 @@ public class Balancing : MonoBehaviour
     [SerializeField] private PlayerStamina stamina;
     [SerializeField] private Vaulting vaulting;
     [SerializeField] private Transform orientation;
+    [SerializeField] private CameraEffects camEffects;
     
     [Header("BalancingSettings")]
     [SerializeField] private float rayDiscrepancy = 0.4f;
     [SerializeField] private float rayLength = 1.3f;
+    [SerializeField] private float speedOscillation = 1.3f;
+    [SerializeField] private float maxAngle = 3f;
+    [SerializeField] private float balanceStaminaCost = 3f;
+    [SerializeField] private float fallPush = 3f;
     [SerializeField] private LayerMask whatIsVaulting;
 
     public Vector3 BeamDirection { get; private set; }
     private Vector3 beamRight;
     private Vector3 beamCenter;
-    [SerializeField] private float centerStreaght = 5f;
+    private float beamHeight;
+    [SerializeField] private float centerStrength = 5f;
     
     public  bool IsBalancing { get; private set; }
     public bool OnBeam { get; private set; }
@@ -32,6 +37,7 @@ public class Balancing : MonoBehaviour
         if (rb == null) rb = GetComponent<Rigidbody>();
         if (stamina == null) stamina = GetComponent<PlayerStamina>();
         if (vaulting == null) vaulting = GetComponent<Vaulting>();
+        if (camEffects == null) camEffects = GetComponent<CameraEffects>();
     }
 
     private void Update()
@@ -45,6 +51,8 @@ public class Balancing : MonoBehaviour
         bool leftHit;
         if (!OnBeam)
         {
+            
+           
             right = transform.position + orientation.right * rayDiscrepancy * 1.5f;
             left = transform.position - orientation.right * rayDiscrepancy * 1.5f;
               
@@ -52,7 +60,7 @@ public class Balancing : MonoBehaviour
             rightHit = Physics.Raycast(right, Vector3.down, rayLength, whatIsVaulting);
             leftHit = Physics.Raycast(left, Vector3.down, rayLength, whatIsVaulting);
 
-            if (centerHit && !rightHit && !leftHit && !pm.vaulting)
+            if (centerHit && !rightHit && !leftHit && !pm.vaulting && !stamina.IsExhausted)
             {
                 BoxCollider box = beamHit.transform.GetComponent<BoxCollider>();
 
@@ -87,8 +95,9 @@ public class Balancing : MonoBehaviour
                     BeamDirection = dir.normalized;
                     beamRight = Vector3.Cross(Vector3.up, BeamDirection);
                     beamCenter = transform.position;
+                    
                 }
-              
+                beamHeight = beamHit.point.y + vaulting.PlayerHalfHeight;
                 OnBeam = true;
             }
                
@@ -106,18 +115,28 @@ public class Balancing : MonoBehaviour
             
             OnBeam = centerHit && !rightHit && !leftHit && !pm.vaulting;
         }
-
-        IsBalancing = OnBeam && !vaulting.perched;
+        float angle = Mathf.Sin(Time.time * speedOscillation) * maxAngle;
         
-        Debug.DrawRay(center, Vector3.down * rayLength, centerHit ? Color.green : Color.red);
-        Debug.DrawRay(right, Vector3.down * rayLength, rightHit ? Color.green : Color.red);
-        Debug.DrawRay(left, Vector3.down * rayLength, leftHit ? Color.green : Color.red);
-
-        if (IsBalancing != lastBalancing)
+        IsBalancing = OnBeam && !vaulting.perched;
+        if (IsBalancing)
         {
-            Debug.Log((IsBalancing ? "ENTRÉE" : "SORTIE") + " équilibre | centre: " + centerHit
-                      + " | droite: " + rightHit + " | gauche: " + leftHit
-                      + " | vaulting: " + pm.vaulting);
+            stamina.Drain(balanceStaminaCost);
+            if (stamina.IsExhausted)
+            {
+                OnBeam = false;
+                IsBalancing = false;
+                
+                rb.AddForce(beamRight * fallPush * Mathf.Sign(angle), ForceMode.Impulse);
+            }
+        }
+        if (IsBalancing)
+        {
+            camEffects.SetBalanceTilt(angle);
+        }
+        
+        if (lastBalancing && !IsBalancing)
+        {
+            camEffects.DoTilt(0f);
         }
         lastBalancing = IsBalancing;
 
@@ -128,10 +147,14 @@ public class Balancing : MonoBehaviour
         
         if (!rb.isKinematic && IsBalancing)
         {
+            float gap = beamHeight - transform.position.y;
+            Vector3 linearVelocity = rb.linearVelocity;
+            linearVelocity.y = gap * centerStrength;
+            rb.linearVelocity = linearVelocity;
             float speed = Vector3.Dot(rb.linearVelocity , beamRight);
             rb.linearVelocity = rb.linearVelocity - beamRight * speed;
             float discrepancy = Vector3.Dot(transform.position - beamCenter ,beamRight);
-            rb.linearVelocity = rb.linearVelocity - beamRight * discrepancy * centerStreaght;
+            rb.linearVelocity = rb.linearVelocity - beamRight * discrepancy * centerStrength;
         }
         
     }

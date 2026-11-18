@@ -97,7 +97,7 @@ public class Climbing : MonoBehaviour
         }
 
         // 3. Escalade active
-        bool canClimb =wallFront && controler != null && controler.moveInput.y > 0 && controler.jumpHeld && wallLookAngle < maxWallLookAngle;
+        bool canClimb = wallFront && controler != null && controler.moveInput.y > 0 && controler.jumpHeld && wallLookAngle < maxWallLookAngle && !pm.IsBusy;
 
         if (canClimb && !ExitingWall && !stamina.IsExhausted)
         {

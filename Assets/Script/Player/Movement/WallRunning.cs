@@ -99,7 +99,7 @@ public class WallRunning : MonoBehaviour
         bool sameWall = false;
         if(hasWall && Vector3.Dot(currentWallNormal, lastWallNormal) > 0.9) sameWall = true;
         
-        if ((wallLeft || wallRight) && verticalInput > 0f && AboveGround() && !exitingWall  && !stamina.IsExhausted && !sameWall)
+        if ((wallLeft || wallRight) && verticalInput > 0f && AboveGround() && !exitingWall  && !stamina.IsExhausted && !sameWall && !pm.IsBusy)
         {
             if (!pm.wallRunning)
             {

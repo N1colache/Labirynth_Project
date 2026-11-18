@@ -110,7 +110,7 @@ public class Sliding : MonoBehaviour
     {
         pm.sliding = false;
         
-        if (!pm.TryToUncouch())
+        if (!pm.TryToUncrouch())
         { 
             pm.crouching = true;
         }

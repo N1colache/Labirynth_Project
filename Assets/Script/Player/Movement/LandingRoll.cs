@@ -77,7 +77,7 @@ public class LandingRoll : MonoBehaviour
 
     private void EndRolling()
     {
-        if (!pm.TryToUncouch())
+        if (!pm.TryToUncrouch())
         {
             pm.crouching = true;
         }

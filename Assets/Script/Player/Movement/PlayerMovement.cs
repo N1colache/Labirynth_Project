@@ -17,7 +17,8 @@ public class PlayerMovement : MonoBehaviour
         Crouching,
         Sliding,
         Balancing,
-        Air
+        Air,
+        Swinging
     }
 
     [Header("References")]
@@ -85,10 +86,15 @@ public class PlayerMovement : MonoBehaviour
     public bool wallRunning;
     public bool climbing;
     public bool vaulting;
+    public bool swinging;
     public bool freeze;
     public bool unlimited;
     public bool restricted;
-    
+    public bool IsBusy
+    {
+        get { return (swinging || vaulting || rb.isKinematic); }
+    }
+
 
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI text_speed;
@@ -113,6 +119,8 @@ public class PlayerMovement : MonoBehaviour
         if (stamina == null) stamina = GetComponent<PlayerStamina>();
     }
 
+   
+
     private void Update()
     {
         // Ground Check
@@ -120,7 +128,10 @@ public class PlayerMovement : MonoBehaviour
         
         if(grounded)
             lastTimeGround = Time.time;
-       
+      
+        
+      
+        
 
         MyInput();
         SpeedControl();
@@ -157,7 +168,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (crouching && grounded && cm.ConsumeJump())
         {
-            if(TryToUncouch())
+            if(TryToUncrouch())
             {
                 crouching = false;
                 
@@ -186,7 +197,7 @@ public class PlayerMovement : MonoBehaviour
                  }
                  else
                  {
-                     if(TryToUncouch())
+                     if(TryToUncrouch())
                      {
                          crouching = false;
                      }
@@ -211,6 +222,10 @@ public class PlayerMovement : MonoBehaviour
             state = MovementState.Unlimited;
             desiredMoveSpeed = 999f;
             return;
+        }
+        else if (swinging)
+        {
+            state = MovementState.Swinging;
         }
         else if (vaulting)
         {
@@ -327,7 +342,7 @@ public class PlayerMovement : MonoBehaviour
     private void MovePlayer()
     {
         if (sliding || wallRunning || climbing || vaulting  || restricted || 
-           (climbingScript != null && climbingScript.ExitingWall)) 
+           (climbingScript != null && climbingScript.ExitingWall) || swinging) 
             return;
 
         if (orientation == null) return;
@@ -452,7 +467,7 @@ public class PlayerMovement : MonoBehaviour
         rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
     }
     
-    public bool TryToUncouch()
+    public bool TryToUncrouch()
     {
         if (Physics.Raycast(transform.position, Vector3.up, 0.75f * playerHeight, whatIsGround))
         {

@@ -35,7 +35,12 @@ public class Vaulting : MonoBehaviour
     [SerializeField] private float strideHopDuration = 2f;
     [SerializeField] private float strideClearance = 2f;
     [SerializeField] private int numberMaxObstacle = 5;
-    
+
+    public float PlayerHalfHeight
+    {
+        get { return playerHalfHeight; }
+    }
+
     private Vector3 top; 
     private Vector3 destination;
     private bool obstacleLow;

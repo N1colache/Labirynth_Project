@@ -32,5 +32,11 @@ public class CameraEffects : MonoBehaviour
         transform.DOKill();
         transform.DOShakePosition(0.2f,0.1f);
     }
+
+    public void SetBalanceTilt(float zBalance)
+    {
+        transform.DOKill();
+        transform.localRotation = Quaternion.Euler(0f, 0f, zBalance);
+    }
     
 }
