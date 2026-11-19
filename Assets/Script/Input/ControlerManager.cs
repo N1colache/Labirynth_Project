@@ -26,7 +26,17 @@ public class ControlerManager : MonoBehaviour
      [SerializeField] private float jumpBufferTime = 0.15f;
      private float lastJumpPressTime;
      public float LastCrouchPressTime{ get; private set; }
-    
+
+     private void Update()
+     {
+         if (sprintInput && moveInput.magnitude < 0.1)
+         {
+             sprintInput = false;
+         }
+
+         
+         
+     }
      private void OnMovement(InputValue value)
      {
          moveInput = value.Get<Vector2>();
@@ -40,6 +50,7 @@ public class ControlerManager : MonoBehaviour
              jumpPending = true;
              lastJumpPressTime = Time.time;
          }
+         
      }
 
      public bool ConsumeJump()
@@ -66,7 +77,15 @@ public class ControlerManager : MonoBehaviour
             
      private void OnSprint(InputValue value)
      {
-         sprintInput = value.isPressed;
+         if (_input.currentControlScheme == "Gamepad")
+         {
+             sprintInput = true;
+         }
+         else
+         {
+              sprintInput = value.isPressed;
+         }
+        
      }
 
      private void OnCrouch(InputValue value)
@@ -114,13 +133,12 @@ public class ControlerManager : MonoBehaviour
     #region Aiming & Looking
      // Variables
      public Vector2 lookInput;
-     public bool lastDeviceIsGamepad;
+     
      
      
      private void OnLook(InputValue value)
         {
             lookInput = value.Get<Vector2>();
-            lastDeviceIsGamepad = _input.currentControlScheme == "Gamepad";
         }
 
     #endregion

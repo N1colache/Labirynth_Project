@@ -1,17 +1,17 @@
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.InputSystem;
+
 public class PlayerCam : MonoBehaviour
 {
    [SerializeField] private ControlerManager controlerManager;
    
-   [SerializeField] private float mouseSensX = 200f;
-   [SerializeField] private float mouseSensY = 200f;
-   [SerializeField] private float gamepadSensX = 200f;
-   [SerializeField] private float gamepadSensY = 200f;
+   [SerializeField] private float gamepadSensitivity = 200f;
+   [SerializeField] private float mouseSensitivity = 0.3f;
 
    [SerializeField] private Transform orientation ;
    [SerializeField] private Transform camHolder ;
-   
+   [SerializeField] private PlayerInput playerInput;
    
    
    float _xRotation;
@@ -27,28 +27,26 @@ public class PlayerCam : MonoBehaviour
    {
       Vector2 lookInput = controlerManager.lookInput;
 
-      bool usingGamepad = controlerManager.lastDeviceIsGamepad;
 
-      float sensX = usingGamepad ? gamepadSensX : mouseSensX;
-      float sensY = usingGamepad ? gamepadSensY : mouseSensY;
+
+      float sensX;
+      float sensY;
       
-      float mouseX;
-      float mouseY;
-      if (usingGamepad)
+      if (playerInput.currentControlScheme == "Gamepad")
       {
-          mouseX = lookInput.x * Time.deltaTime * sensX;
-          mouseY = lookInput.y * Time.deltaTime * sensY;
+         sensX = lookInput.x * Time.deltaTime * gamepadSensitivity;
+         sensY = lookInput.y * Time.deltaTime * gamepadSensitivity;
       }
       else
       {
-         mouseX = lookInput.x * sensX;
-         mouseY = lookInput.y * sensY;
+         sensX = lookInput.x * mouseSensitivity;
+         sensY = lookInput.y * mouseSensitivity;
       }
       
 
-      _yRotation += mouseX;
+      _yRotation += sensX;
 
-      _xRotation -= mouseY;
+      _xRotation -= sensY;
       _xRotation = Mathf.Clamp(_xRotation, -90f, 90f);
 
       camHolder.rotation = Quaternion.Euler(_xRotation, _yRotation, 0f);
