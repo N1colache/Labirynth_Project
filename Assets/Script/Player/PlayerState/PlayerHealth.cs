@@ -53,7 +53,6 @@ public class PlayerHealth : MonoBehaviour
     private void Die()
     {
         IsDead = true;
-        Debug.Log(gameObject.name + " is dead");
     }
 
     public void IncreaseMaxHealth(float amount)
@@ -67,9 +66,17 @@ public class PlayerHealth : MonoBehaviour
     {
         TakeDamage(28);
     }
+    
     [ContextMenu("Test Heal")]
     private void TestHeal()
     {
         Heal(28);
+    }
+    
+    public void ResetHealth()
+    {
+        CurrentHealth = maxHealth;
+        IsDead = false;
+        lastDamageTime = 0f;
     }
 }

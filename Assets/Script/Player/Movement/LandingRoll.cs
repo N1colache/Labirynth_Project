@@ -8,6 +8,7 @@ public class LandingRoll : MonoBehaviour
     [SerializeField] private Rigidbody rb;
     [SerializeField] private Transform orientation;
     [SerializeField] private CameraEffects cam;
+    [SerializeField] private PlayerHealth health;
     
     [Header("RollSettings")]
     [SerializeField] private float minFallHeight = 4f;
@@ -20,6 +21,9 @@ public class LandingRoll : MonoBehaviour
     [SerializeField] private float hardLandingTime = 0.6f;
     private bool wasGrounded = false;
     private float heightPoint;
+    public float safeFallHeight = 6f;
+    public float damagePerMeter = 10f;
+    public float rollDamageMultiplier = 0.5f;
     
    
     
@@ -46,19 +50,32 @@ public class LandingRoll : MonoBehaviour
             }
         }
 
+        if (pm.IsBusy || pm.climbing || pm.wallRunning || pm.freeze || pm.unlimited)
+        {
+            heightPoint = transform.position.y;
+        }
+
         if (pm.grounded && !wasGrounded)
         {
             float heinghtfall =  heightPoint - transform.position.y;
+            float dammage =  (heinghtfall - safeFallHeight) * damagePerMeter;
+            dammage = Mathf.Max(0,dammage);
             
             if (heinghtfall >= minFallHeight)
             {
                 if (cm != null && Time.time - cm.LastCrouchPressTime < lapsTimeCrouchInput)
-                {  
+                {
+                    dammage *= rollDamageMultiplier;
                     Rolling();
                 }
                 else 
                 {
                     HardLanding();
+                }
+
+                if (dammage > 0)
+                {
+                    health.TakeDamage(dammage);
                 }
             }
             

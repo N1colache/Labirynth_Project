@@ -39,6 +39,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float crouchSpeed = 3.5f;
     [SerializeField] private float balancingSpeed = 2.5f;
     public float maxYSpeed;
+    public float speedMultiplier = 1f;
+    public float CurrentMoveSpeed{get{return moveSpeed * speedMultiplier;}}
 
     private float moveSpeed;
     private float desiredMoveSpeed;
@@ -97,8 +99,8 @@ public class PlayerMovement : MonoBehaviour
 
 
     [Header("UI")]
-    [SerializeField] private TextMeshProUGUI text_speed;
-    [SerializeField] private TextMeshProUGUI text_state;
+    [SerializeField] private TextMeshProUGUI textSpeed;
+    [SerializeField] private TextMeshProUGUI textState;
 
     // Directives d'entrées et déplacements
     private float horizontalInput;
@@ -118,9 +120,6 @@ public class PlayerMovement : MonoBehaviour
         startYScale = transform.localScale.y;
         if (stamina == null) stamina = GetComponent<PlayerStamina>();
     }
-
-   
-
     private void Update()
     {
         // Ground Check
@@ -128,11 +127,7 @@ public class PlayerMovement : MonoBehaviour
         
         if(grounded)
             lastTimeGround = Time.time;
-      
         
-      
-        
-
         MyInput();
         SpeedControl();
         StateHandler();
@@ -360,7 +355,7 @@ public class PlayerMovement : MonoBehaviour
         // Déplacement sur une pente
         if (OnSlope() && !exitingSlope)
         {
-            rb.AddForce(GetSlopeMoveDirection(moveDirection) * moveSpeed * 20f, ForceMode.Force);
+            rb.AddForce(GetSlopeMoveDirection(moveDirection) * CurrentMoveSpeed * 20f, ForceMode.Force);
 
             if (rb.linearVelocity.y > 0f)
             {
@@ -370,12 +365,12 @@ public class PlayerMovement : MonoBehaviour
         // Déplacement sur le sol
         else if (grounded)
         {
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f, ForceMode.Force);
+            rb.AddForce(moveDirection.normalized * CurrentMoveSpeed * 10f, ForceMode.Force);
         }
         // Déplacement dans l'air
         else
         {
-            rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            rb.AddForce(moveDirection.normalized * CurrentMoveSpeed * 10f * airMultiplier, ForceMode.Force);
         }
 
         if (!wallRunning)
@@ -389,16 +384,16 @@ public class PlayerMovement : MonoBehaviour
         
         if (OnSlope() && !exitingSlope)
         {
-            if (rb.linearVelocity.magnitude > moveSpeed)
-                rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
+            if (rb.linearVelocity.magnitude > CurrentMoveSpeed)
+                rb.linearVelocity = rb.linearVelocity.normalized * CurrentMoveSpeed;
         }
         else
         {
             Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
-            if (flatVel.magnitude > moveSpeed)
+            if (flatVel.magnitude > CurrentMoveSpeed)
             {
-                Vector3 limitedVel = flatVel.normalized * moveSpeed;
+                Vector3 limitedVel = flatVel.normalized * CurrentMoveSpeed;
                 rb.linearVelocity = new Vector3(limitedVel.x, rb.linearVelocity.y, limitedVel.z);
             }
         }
@@ -443,15 +438,15 @@ public class PlayerMovement : MonoBehaviour
     
     private void UpdateUI()
     {
-        if (text_speed != null)
+        if (textSpeed != null)
         {
             float displayedSpeed = OnSlope() ? rb.linearVelocity.magnitude : new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z).magnitude;
-            text_speed.SetText($"Speed: {Round(displayedSpeed, 1)} / {Round(moveSpeed, 1)}");
+            textSpeed.SetText($"Speed: {Round(displayedSpeed, 1)} / {Round(CurrentMoveSpeed, 1)}");
         }
 
-        if (text_state != null)
+        if (textState != null)
         {
-            text_state.SetText($"State: {state}");
+            textState.SetText($"State: {state}");
         }
     }
 

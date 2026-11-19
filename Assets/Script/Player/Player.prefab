@@ -135,6 +135,13 @@ GameObject:
   - component: {fileID: 714490655174435723}
   - component: {fileID: 7306360779848159086}
   - component: {fileID: 8757587810558888311}
+  - component: {fileID: 2035228614566773082}
+  - component: {fileID: 253713504146024421}
+  - component: {fileID: 1273620251454169568}
+  - component: {fileID: 4863868135013433609}
+  - component: {fileID: 8249667986653802141}
+  - component: {fileID: 6292559414061738868}
+  - component: {fileID: 31215761148365911}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -238,7 +245,6 @@ MonoBehaviour:
   downwardsRunning: 0
   jumpBufferTime: 0.15
   lookInput: {x: 0, y: 0}
-  lastDeviceIsGamepad: 0
   attackInput: 0
   interactInput: 0
 --- !u!114 &4000733282375217137
@@ -268,6 +274,7 @@ MonoBehaviour:
   crouchSpeed: 3.5
   balancingSpeed: 2.5
   maxYSpeed: 15
+  speedMultiplier: 1
   sprintStaminaCost: 12
   slopeIncreaseMultiplier: 2.5
   slideSpeedChangeFactor: 10
@@ -292,11 +299,12 @@ MonoBehaviour:
   wallRunning: 0
   climbing: 0
   vaulting: 0
+  swinging: 0
   freeze: 0
   unlimited: 0
   restricted: 0
-  text_speed: {fileID: 0}
-  text_state: {fileID: 0}
+  textSpeed: {fileID: 0}
+  textState: {fileID: 0}
   coyoteTime: 0.12
 --- !u!114 &7755739056735601987
 MonoBehaviour:
@@ -425,6 +433,7 @@ MonoBehaviour:
   ledgeJumpStaminaCost: 10
   shimmySpeed: 2
   hangBelowTop: 0.5
+  maxPullTime: 0.5
 --- !u!114 &8378398091212186195
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -441,6 +450,8 @@ MonoBehaviour:
   regenPerSecond: 25
   regenDelay: 0.8
   exhaustedThreshold: 25
+  regenMultiplier: 1
+  maxMultiplier: 1
 --- !u!114 &714490655174435723
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -454,16 +465,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LandingRoll
   pm: {fileID: 4000733282375217137}
-  cm: {fileID: 0}
+  cm: {fileID: 111023161251497732}
   rb: {fileID: 7490419956704284297}
   orientation: {fileID: 4158331847142779515}
   cam: {fileID: 0}
+  health: {fileID: 253713504146024421}
   minFallHeight: 4
   lapsTimeCrouchInput: 0.3
   rollTime: 0.5
   rollStrength: 5
   timeStuck: 0.3
   hardLandingTime: 0.6
+  safeFallHeight: 6
+  damagePerMeter: 10
+  rollDamageMultiplier: 0.5
 --- !u!114 &7306360779848159086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -525,10 +540,179 @@ MonoBehaviour:
   rayLength: 1.3
   speedOscillation: 1.3
   maxAngle: 3
+  balanceStaminaCost: 3
+  fallPush: 3
   whatIsVaulting:
     serializedVersion: 2
     m_Bits: 512
-  centerStreaght: 5
+  centerStrength: 5
+--- !u!114 &2035228614566773082
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fc37d355a6a65d41af28e2446df6f4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BarSwing
+  pm: {fileID: 4000733282375217137}
+  cm: {fileID: 111023161251497732}
+  rb: {fileID: 7490419956704284297}
+  stamina: {fileID: 8378398091212186195}
+  lg: {fileID: 8166359975310820306}
+  orientation: {fileID: 4158331847142779515}
+  cameraEffects: {fileID: 0}
+  whatIsBar:
+    serializedVersion: 2
+    m_Bits: 1024
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 64
+  grabRadius: 0.6
+  grabHeight: 1
+  grabReach: 0.6
+  swingRadius: 1.2
+  collisionRadius: 1.2
+  collisionHalfHeight: 0.6
+  pumpStrength: 2
+  swingDamping: 0.3
+  maxSwingAngle: 75
+  hangStaminaCost: 2
+  releaseFov: 90
+  normalFOV: 80
+  releaseUpBoost: 2
+  releaseForwardBoost: 2
+  swingJumpCost: 8
+  dropCooldown: 0.5
+--- !u!114 &253713504146024421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6f5171563eacf94d809357cc097304a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  regenDelay: 4
+  regenRate: 15
+  canRegenerate: 1
+--- !u!114 &1273620251454169568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cab489180b39bf4a8363067baed8b30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SurvivalNeeds
+  neededName: Faim
+  maxValue: 100
+  decayRate: 0.5
+--- !u!114 &4863868135013433609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cab489180b39bf4a8363067baed8b30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SurvivalNeeds
+  neededName: Soif
+  maxValue: 100
+  decayRate: 0.8
+--- !u!114 &8249667986653802141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc7de067d173be24d8b2506515511570, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SurvivalEffects
+  hunger: {fileID: 1273620251454169568}
+  thirst: {fileID: 4863868135013433609}
+  health: {fileID: 253713504146024421}
+  stamina: {fileID: 8378398091212186195}
+  pm: {fileID: 4000733282375217137}
+  slowThreshold: 0.3
+  slowMultiplier: 0.3
+  starveDamage: 0.3
+  starveInterval: 2
+  minThirstRegen: 0.3
+  dehydratedMax: 0.5
+--- !u!114 &6292559414061738868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9fc37d355a6a65d41af28e2446df6f4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BarSwing
+  pm: {fileID: 4000733282375217137}
+  cm: {fileID: 111023161251497732}
+  rb: {fileID: 7490419956704284297}
+  stamina: {fileID: 8378398091212186195}
+  lg: {fileID: 8166359975310820306}
+  orientation: {fileID: 4158331847142779515}
+  cameraEffects: {fileID: 0}
+  whatIsBar:
+    serializedVersion: 2
+    m_Bits: 1024
+  whatIsGround:
+    serializedVersion: 2
+    m_Bits: 64
+  grabRadius: 0.6
+  grabHeight: 1
+  grabReach: 0.6
+  swingRadius: 1.2
+  collisionRadius: 1.2
+  collisionHalfHeight: 0.6
+  pumpStrength: 2
+  swingDamping: 0.3
+  maxSwingAngle: 75
+  hangStaminaCost: 2
+  releaseFov: 90
+  normalFOV: 80
+  releaseUpBoost: 2
+  releaseForwardBoost: 2
+  swingJumpCost: 8
+  dropCooldown: 0.5
+--- !u!114 &31215761148365911
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6f5171563eacf94d809357cc097304a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  maxHealth: 100
+  regenDelay: 4
+  regenRate: 15
+  canRegenerate: 1
 --- !u!1 &8551438938099854651
 GameObject:
   m_ObjectHideFlags: 0

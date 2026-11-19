@@ -2,13 +2,20 @@ using UnityEngine;
 
 public class PlayerStamina : MonoBehaviour
 {
-    [SerializeField] public float maxStamina = 100f;
+    [SerializeField] private float maxStamina = 100f; 
+    public float MaxStamina
+    {
+        get { return maxStamina; }
+    }
     [SerializeField] private float regenPerSecond = 25f;
     [SerializeField] private float regenDelay = 0.8f;
     [SerializeField] private float exhaustedThreshold = 25f;
 
     public  float CurrentStamina { get; private set; }
+    public float EffectiveMax { get { return maxStamina * maxMultiplier; } }
     private float lastTimeStamina;
+    public float regenMultiplier = 1f;
+    public float maxMultiplier = 1f;
     public  bool IsExhausted{ get; private set; }
     
     private void Awake()
@@ -41,11 +48,23 @@ public class PlayerStamina : MonoBehaviour
 
     private void Update()
     {
-        if (CurrentStamina >= maxStamina) return;
+        CurrentStamina = Mathf.Min(CurrentStamina, EffectiveMax);
+        if (CurrentStamina >= EffectiveMax) return;
         if (Time.time - lastTimeStamina < regenDelay) return;
-        CurrentStamina = Mathf.Min(maxStamina, CurrentStamina + (regenPerSecond * Time.deltaTime));
+        CurrentStamina = Mathf.Min(EffectiveMax, CurrentStamina + (regenPerSecond * regenMultiplier *Time.deltaTime));
         
         if(CurrentStamina > exhaustedThreshold)
             IsExhausted = false;
+    }
+
+    public void MultiplyMaxStamina(float amount)
+    {
+        maxStamina *= amount;
+    }
+
+    public void ResetStamina()
+    {
+        CurrentStamina = maxStamina;
+        IsExhausted = false;
     }
 }
