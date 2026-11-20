@@ -13487,6 +13487,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 3491366542796970523, guid: e88df006827c0014283ef798b9a656b7, type: 3}
+      propertyPath: cm
+      value: 
+      objectReference: {fileID: 245576766}
+    - target: {fileID: 3491366542796970523, guid: e88df006827c0014283ef798b9a656b7, type: 3}
       propertyPath: orientation
       value: 
       objectReference: {fileID: 1664745641}

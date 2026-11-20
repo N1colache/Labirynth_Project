@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerCam : MonoBehaviour
 {
-   [SerializeField] private ControlerManager controlerManager;
+   [SerializeField] private ControlerManager cm;
    
    [SerializeField] private float gamepadSensitivity = 200f;
    [SerializeField] private float mouseSensitivity = 0.3f;
@@ -21,18 +21,22 @@ public class PlayerCam : MonoBehaviour
    {
       Cursor.lockState = CursorLockMode.Locked;
       Cursor.visible = false;
+      
+      mouseSensitivity =  PlayerPrefs.GetFloat("MouseSensitivity",mouseSensitivity);
+      gamepadSensitivity=  PlayerPrefs.GetFloat("GamePadSensitivity",gamepadSensitivity);
    }
 
    void Update()
    {
-      Vector2 lookInput = controlerManager.lookInput;
+      if(Time.timeScale== 0)return;
+      Vector2 lookInput = cm.lookInput;
 
 
 
       float sensX;
       float sensY;
       
-      if (playerInput.currentControlScheme == "Gamepad")
+      if (cm.IsGamePad)
       {
          sensX = lookInput.x * Time.deltaTime * gamepadSensitivity;
          sensY = lookInput.y * Time.deltaTime * gamepadSensitivity;
