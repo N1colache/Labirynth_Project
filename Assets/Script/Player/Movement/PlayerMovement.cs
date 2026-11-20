@@ -381,6 +381,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void SpeedControl()
     {
+        if(unlimited) return;
         
         if (OnSlope() && !exitingSlope)
         {

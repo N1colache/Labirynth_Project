@@ -133,6 +133,7 @@ public class LedgeGrabbing : MonoBehaviour
             {
                hangPoint = nextPoint;
                transform.position += move;
+               rb.position = transform.position;
             }
          }
          // Substate 2 - Exiting Ledge
@@ -233,6 +234,7 @@ public class LedgeGrabbing : MonoBehaviour
       else
       {
          transform.position = hangPoint;
+         rb.position = transform.position;
          rb.linearVelocity = Vector3.zero;
          
             if (!pm.freeze)
