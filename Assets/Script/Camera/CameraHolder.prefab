@@ -47,12 +47,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCam
   controlerManager: {fileID: 0}
-  mouseSensX: 0.15
-  mouseSensY: 0.15
-  gamepadSensX: 200
-  gamepadSensY: 200
+  gamepadSensitivity: 200
+  mouseSensitivity: 0.3
   orientation: {fileID: 0}
   camHolder: {fileID: 6418393403974260685}
+  playerInput: {fileID: 0}
 --- !u!114 &6668351628863940466
 MonoBehaviour:
   m_ObjectHideFlags: 0
