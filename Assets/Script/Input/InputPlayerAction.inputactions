@@ -339,6 +339,17 @@
                 },
                 {
                     "name": "",
+                    "id": "a32fee66-7d3c-4b4b-a837-006e9f895b7f",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Crouch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "560e887a-1e16-4cf1-86f2-9c9d953bb840",
                     "path": "<Keyboard>/q",
                     "interactions": "",
