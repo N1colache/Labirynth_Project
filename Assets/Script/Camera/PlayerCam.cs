@@ -1,6 +1,4 @@
 using UnityEngine;
-using DG.Tweening;
-using UnityEngine.InputSystem;
 
 public class PlayerCam : MonoBehaviour
 {
@@ -11,7 +9,7 @@ public class PlayerCam : MonoBehaviour
 
    [SerializeField] private Transform orientation ;
    [SerializeField] private Transform camHolder ;
-   [SerializeField] private PlayerInput playerInput;
+
    
    
    float _xRotation;
@@ -56,5 +54,15 @@ public class PlayerCam : MonoBehaviour
       camHolder.rotation = Quaternion.Euler(_xRotation, _yRotation, 0f);
       orientation.rotation = Quaternion.Euler(0f, _yRotation, 0f);
       
+   }
+
+   public void SetMouseSensitivity(float value)
+   {
+      mouseSensitivity = value;
+   }
+
+   public void SetGamePadSensitivity(float value)
+   {
+      gamepadSensitivity =  value;
    }
 }

@@ -140,6 +140,8 @@ GameObject:
   - component: {fileID: 1273620251454169568}
   - component: {fileID: 4863868135013433609}
   - component: {fileID: 8249667986653802141}
+  - component: {fileID: 7038676570901583429}
+  - component: {fileID: 7636291398335045079}
   m_Layer: 3
   m_Name: Player
   m_TagString: Player
@@ -263,6 +265,7 @@ MonoBehaviour:
   orientation: {fileID: 4158331847142779515}
   stamina: {fileID: 8378398091212186195}
   balancing: {fileID: 8757587810558888311}
+  slidingScript: {fileID: 859557149092648199}
   walkSpeed: 4
   sprintSpeed: 8
   slideSpeed: 30
@@ -654,6 +657,52 @@ MonoBehaviour:
   starveInterval: 2
   minThirstRegen: 0.3
   dehydratedMax: 0.5
+--- !u!114 &7038676570901583429
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f3e31586e1f25a4ab4308350e4cbd7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DeathManager
+  pm: {fileID: 4000733282375217137}
+  rb: {fileID: 7490419956704284297}
+  playerHealth: {fileID: 253713504146024421}
+  survivalEffects: {fileID: 8249667986653802141}
+  playerStamina: {fileID: 8378398091212186195}
+  spawnPoint: {fileID: 0}
+  image: {fileID: 0}
+  timeFade: 1
+  waitTime: 2
+--- !u!114 &7636291398335045079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5063575984513586665}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82d4a58adf3cc434ab07a8ed6ea15127, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PauseMenu
+  playerCam: {fileID: 0}
+  titlePanel: {fileID: 0}
+  titlePanelOption: {fileID: 0}
+  resumeButton: {fileID: 0}
+  firstSlider: {fileID: 0}
+  menuScene: MainMenu
+  cm: {fileID: 111023161251497732}
+  sliderMouse: {fileID: 0}
+  sliderGamePad: {fileID: 0}
+  valueSliderMouse: {fileID: 0}
+  valueSliderGamePad: {fileID: 0}
+  defaultValueGamePad: 150
+  defaultValueMouse: 0.5
 --- !u!1 &8551438938099854651
 GameObject:
   m_ObjectHideFlags: 0
