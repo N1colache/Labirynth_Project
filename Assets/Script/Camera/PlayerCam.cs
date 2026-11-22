@@ -1,17 +1,15 @@
 using UnityEngine;
-using DG.Tweening;
-using UnityEngine.InputSystem;
 
 public class PlayerCam : MonoBehaviour
 {
-   [SerializeField] private ControlerManager controlerManager;
+   [SerializeField] private ControlerManager cm;
    
    [SerializeField] private float gamepadSensitivity = 200f;
    [SerializeField] private float mouseSensitivity = 0.3f;
 
    [SerializeField] private Transform orientation ;
    [SerializeField] private Transform camHolder ;
-   [SerializeField] private PlayerInput playerInput;
+
    
    
    float _xRotation;
@@ -21,18 +19,22 @@ public class PlayerCam : MonoBehaviour
    {
       Cursor.lockState = CursorLockMode.Locked;
       Cursor.visible = false;
+      
+      mouseSensitivity =  PlayerPrefs.GetFloat("MouseSensitivity",mouseSensitivity);
+      gamepadSensitivity=  PlayerPrefs.GetFloat("GamePadSensitivity",gamepadSensitivity);
    }
 
    void Update()
    {
-      Vector2 lookInput = controlerManager.lookInput;
+      if(Time.timeScale== 0)return;
+      Vector2 lookInput = cm.lookInput;
 
 
 
       float sensX;
       float sensY;
       
-      if (playerInput.currentControlScheme == "Gamepad")
+      if (cm.IsGamePad)
       {
          sensX = lookInput.x * Time.deltaTime * gamepadSensitivity;
          sensY = lookInput.y * Time.deltaTime * gamepadSensitivity;
@@ -52,5 +54,15 @@ public class PlayerCam : MonoBehaviour
       camHolder.rotation = Quaternion.Euler(_xRotation, _yRotation, 0f);
       orientation.rotation = Quaternion.Euler(0f, _yRotation, 0f);
       
+   }
+
+   public void SetMouseSensitivity(float value)
+   {
+      mouseSensitivity = value;
+   }
+
+   public void SetGamePadSensitivity(float value)
+   {
+      gamepadSensitivity =  value;
    }
 }

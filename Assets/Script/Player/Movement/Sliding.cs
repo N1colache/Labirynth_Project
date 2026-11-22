@@ -13,13 +13,11 @@ public class Sliding : MonoBehaviour
     [Header("Sliding Settings")]
     [SerializeField] private float maxSlideTime = 0.75f;
     [SerializeField] private float slideForce = 400f;
+    public bool CanSlide { get{return pm.state == PlayerMovement.MovementState.Sprinting &&  !pm.restricted  && !pm.freeze && pm.grounded && !pm.sliding && controler.moveInput.magnitude > 0.1f; } }
     
     private float slideTimer;
-    private bool slideInputPrevious;
     private Vector3 slideDirection;
-
-    private float horizontalInput;
-    private float verticalInput;
+    
 
     private void Start()
     {
@@ -29,37 +27,7 @@ public class Sliding : MonoBehaviour
         
     }
 
-    private void Update()
-    {
-        if (controler == null) return;
-
-        horizontalInput = controler.moveInput.x;
-        verticalInput = controler.moveInput.y;
-        bool isSprinting = pm.state == PlayerMovement.MovementState.Sprinting;
-
-        bool hasInput = horizontalInput != 0f || verticalInput != 0f;
-        bool canSlide = !pm.sliding && !pm.restricted && !pm.freeze  && hasInput && pm.grounded && isSprinting;
-
-        // Détection de l'appui (Front montant)
-        if (controler.slideInput)
-        {
-            Debug.Log("sprint: " + isSprinting + " | sol: " + pm.grounded + " | état: " + pm.state
-                      + " | sliding: " + pm.sliding + " | restricted: " + pm.restricted + " | freeze: " + pm.freeze);
-        }
-        if (controler.slideInput && !slideInputPrevious && canSlide)
-        {
-            StartSlide();
-            Debug.Log("Slide");
-        }
-
-        // Relâchement de la touche de glissade
-        if (!controler.slideInput && pm.sliding)
-        {
-            StopSlide();
-        }
-
-        slideInputPrevious = controler.slideInput;
-    }
+ 
 
     private void FixedUpdate()
     {
@@ -69,13 +37,16 @@ public class Sliding : MonoBehaviour
         }
     }
 
-    private void StartSlide()
+    public void StartSlide()
     {
+        float horizontalInput = controler.moveInput.x;
+        float verticalInput = controler.moveInput.y;
+        
         pm.sliding = true;
 
         slideDirection = (orientation.forward * verticalInput + orientation.right * horizontalInput).normalized;
         
-            pm.Crouch();
+        pm.Crouch();
             
         slideTimer = maxSlideTime;
     }
@@ -106,7 +77,7 @@ public class Sliding : MonoBehaviour
         }
     }
 
-    private void StopSlide()
+    public void StopSlide()
     {
         pm.sliding = false;
         

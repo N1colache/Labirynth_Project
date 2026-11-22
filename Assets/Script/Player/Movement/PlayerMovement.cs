@@ -28,6 +28,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform orientation;
     [SerializeField] private PlayerStamina stamina;
     [SerializeField] private Balancing balancing;
+    [SerializeField] private Sliding slidingScript;
 
     [Header("Movement Speeds")]
     [SerializeField] private float walkSpeed = 7f;
@@ -114,6 +115,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (rb == null) rb = GetComponent<Rigidbody>();
         if (balancing == null) balancing = GetComponent<Balancing>();
+        if (slidingScript == null) slidingScript = GetComponent<Sliding>();
         
         rb.freezeRotation = true;
         readyToJump = true;
@@ -175,6 +177,10 @@ public class PlayerMovement : MonoBehaviour
         if (  !rb.isKinematic && readyToJump && canStillJump && !crouching && cm.ConsumeJump() ) 
         {
             readyToJump = false;
+            if (sliding)
+            {
+                slidingScript.StopSlide();
+            }
             Jump();
             Invoke(nameof(ResetJump), jumpCooldown);
         }
@@ -185,18 +191,26 @@ public class PlayerMovement : MonoBehaviour
 
             if (grounded)
             {
-                 if (!crouching)
-                 {
-                     crouching = true;
-                     Crouch();
-                 }
-                 else
-                 {
-                     if(TryToUncrouch())
-                     {
-                         crouching = false;
-                     }
-                 }
+                if (sliding)
+                {
+                    slidingScript.StopSlide();
+                }
+                else if(slidingScript.CanSlide)
+                {
+                    slidingScript.StartSlide(); 
+                }
+                else if (!crouching) 
+                { 
+                    crouching = true;
+                    Crouch();
+                }
+                else
+                {
+                    if(TryToUncrouch())
+                    { 
+                        crouching = false;
+                    }
+                }
             }
             
             cm.crouchInput = false; 

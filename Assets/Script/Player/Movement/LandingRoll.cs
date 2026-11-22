@@ -112,4 +112,9 @@ public class LandingRoll : MonoBehaviour
     {
         pm.restricted = false;
     }
+
+    public void ResetFallHeight()
+    {
+        heightPoint = transform.position.y;
+    }
 }

@@ -6,7 +6,7 @@ public class ControlerManager : MonoBehaviour
 {
     private PlayerInput _input;
     
-    private void Start()
+    private void Awake()
     {
         _input = GetComponent<PlayerInput>();
     }
@@ -26,10 +26,11 @@ public class ControlerManager : MonoBehaviour
      [SerializeField] private float jumpBufferTime = 0.15f;
      private float lastJumpPressTime;
      public float LastCrouchPressTime{ get; private set; }
+     public bool IsGamePad{get {return _input.currentControlScheme == "Gamepad";}}
 
      private void Update()
      {
-         if (sprintInput && moveInput.magnitude < 0.1)
+         if (IsGamePad &&sprintInput && moveInput.magnitude < 0.1)
          {
              sprintInput = false;
          }
@@ -77,7 +78,7 @@ public class ControlerManager : MonoBehaviour
             
      private void OnSprint(InputValue value)
      {
-         if (_input.currentControlScheme == "Gamepad")
+         if (IsGamePad)
          {
              sprintInput = true;
          }
