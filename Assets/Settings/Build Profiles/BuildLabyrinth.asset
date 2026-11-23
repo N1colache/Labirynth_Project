@@ -31,7 +31,7 @@ MonoBehaviour:
   - m_enabled: 1
     m_path: Assets/Scenes/TechSecne.unity
     m_guid: 2d17e449745d3b749a3fad5101efb28d
-  - m_enabled: 1
+  - m_enabled: 0
     m_path: Assets/Scenes/Level_Design_V2.unity
     m_guid: bb4de3b895ca3894eb5ac769fb1b8cc7
   m_HasScriptingDefines: 0
