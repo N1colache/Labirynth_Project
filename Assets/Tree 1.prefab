@@ -344,7 +344,7 @@ MonoBehaviour:
   m_Name: Tree Data
   m_EditorClassIdentifier: UnityEditor.dll::TreeEditor.TreeData
   _uniqueID: 5
-  materialHash: 31d6cfe0d16ae931b73c59d7e0c089c0-583008256
+  materialHash: 
   root:
     _uniqueID: 1
     seed: 1234
