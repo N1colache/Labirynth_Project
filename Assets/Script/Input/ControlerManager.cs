@@ -5,6 +5,9 @@ using UnityEngine.InputSystem;
 public class ControlerManager : MonoBehaviour
 {
     private PlayerInput _input;
+    public bool isSkip;
+    private float lastSkipPressed;
+    [SerializeField] float skipBufferTime = 0.15f;
     
     private void Awake()
     {
@@ -103,14 +106,40 @@ public class ControlerManager : MonoBehaviour
     #endregion
 
    
+    private void OnSkipDial(InputValue value)
+    {
+        if (value.isPressed)
+        {
+            isSkip = true;
+            lastSkipPressed = Time.time;
+        }
+    }
+    public bool ConsumeSkip()
+    {
+        if (isSkip)
+        {
+            if (Time.time - lastSkipPressed > skipBufferTime)
+            {
+                isSkip = false;
+                return false;
+            }
+            else
+            {
+                isSkip = false;
+                return true;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-    
 
-   
 
-  
 
-   
-    
-    
+
+
+
+
 }
