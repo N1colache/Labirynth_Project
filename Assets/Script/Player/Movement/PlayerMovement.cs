@@ -35,7 +35,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float sprintSpeed = 10f;
     [SerializeField] private float slideSpeed = 12f;
     [SerializeField] private float wallRunSpeed = 8f;
-    [SerializeField] private float climSpeed = 5f;
+    [SerializeField] private float climbSpeed = 5f;
     [SerializeField] private float vaultSpeed = 10f;
     [SerializeField] private float crouchSpeed = 3.5f;
     [SerializeField] private float balancingSpeed = 2.5f;
@@ -244,7 +244,7 @@ public class PlayerMovement : MonoBehaviour
         else if (climbing)
         {
             state = MovementState.Climbing;
-            desiredMoveSpeed = climSpeed;
+            desiredMoveSpeed = climbSpeed;
         }
         else if (wallRunning)
         {
@@ -353,20 +353,14 @@ public class PlayerMovement : MonoBehaviour
         if (sliding || wallRunning || climbing || vaulting  || restricted || 
            (climbingScript != null && climbingScript.ExitingWall) || swinging) 
             return;
-
         if (orientation == null) return;
-
-        // Calcule la direction du mouvement par rapport à l'orientation
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
-
         if (balancing.IsBalancing)
         {
             float facing = Vector3.Dot(orientation.forward, balancing.BeamDirection);
             Vector3 walkDirection = facing >= 0 ? balancing.BeamDirection  : - balancing.BeamDirection;
             moveDirection = walkDirection * verticalInput;
         }
-
-        // Déplacement sur une pente
         if (OnSlope() && !exitingSlope)
         {
             rb.AddForce(GetSlopeMoveDirection(moveDirection) * CurrentMoveSpeed * 20f, ForceMode.Force);
@@ -376,17 +370,14 @@ public class PlayerMovement : MonoBehaviour
                 rb.AddForce(Vector3.down * 80f, ForceMode.Force);
             }
         }
-        // Déplacement sur le sol
         else if (grounded)
         {
             rb.AddForce(moveDirection.normalized * CurrentMoveSpeed * 10f, ForceMode.Force);
         }
-        // Déplacement dans l'air
         else
         {
             rb.AddForce(moveDirection.normalized * CurrentMoveSpeed * 10f * airMultiplier, ForceMode.Force);
         }
-
         if (!wallRunning)
         {
             rb.useGravity = !OnSlope();
