@@ -5,6 +5,9 @@ using UnityEngine.InputSystem;
 public class ControlerManager : MonoBehaviour
 {
     private PlayerInput _input;
+    public bool isSkip;
+    private float lastSkipPressed;
+    [SerializeField] float skipBufferTime = 0.15f;
     
     private void Awake()
     {
@@ -19,9 +22,7 @@ public class ControlerManager : MonoBehaviour
      private bool jumpPending;
      public bool sprintInput;
      public bool crouchInput;
-     public bool slideInput;
-     public bool upwardsRunning ;
-     public bool downwardsRunning;
+   
      
      [SerializeField] private float jumpBufferTime = 0.15f;
      private float lastJumpPressTime;
@@ -30,33 +31,28 @@ public class ControlerManager : MonoBehaviour
 
      private void Update()
      {
-         if (IsGamePad &&sprintInput && moveInput.magnitude < 0.1)
+         if (IsGamePad && sprintInput && moveInput.magnitude < 0.1)
          {
              sprintInput = false;
          }
-
-         
-         
      }
      private void OnMovement(InputValue value)
      {
          moveInput = value.Get<Vector2>();
-                   
      }
      private void OnJump(InputValue value)
      {
          jumpHeld = value.isPressed;
-         if(value.isPressed == true)
+         if(value.isPressed)
          {
              jumpPending = true;
              lastJumpPressTime = Time.time;
          }
-         
      }
 
      public bool ConsumeJump()
      {
-         if (jumpPending == true)
+         if (jumpPending)
          {
              if (Time.time - lastJumpPressTime > jumpBufferTime)
              {
@@ -68,7 +64,6 @@ public class ControlerManager : MonoBehaviour
                   jumpPending = false;
                   return true;
              }
-            
          }
          else
          {
@@ -98,45 +93,11 @@ public class ControlerManager : MonoBehaviour
              LastCrouchPressTime = Time.time;
          }
      }
-
-     private void OnSlide(InputValue value)
-     {
-         slideInput = value.isPressed;
-     }
-     
-     private void OnWallRun(InputValue value)
-     {
-         if (value.Get<float> () > 0.5f)
-
-         {
-             upwardsRunning = true;
-         } 
-         else
-         {
-             upwardsRunning = false;
-          
-         }
-        
-         if ( value.Get<float> () < -0.5f)
-         {
-             downwardsRunning = true;
-         }
-         else
-         {
-             downwardsRunning = false;
-         }
-
-        
-        
-     }
     #endregion
 
     #region Aiming & Looking
      // Variables
      public Vector2 lookInput;
-     
-     
-     
      private void OnLook(InputValue value)
         {
             lookInput = value.Get<Vector2>();
@@ -144,36 +105,41 @@ public class ControlerManager : MonoBehaviour
 
     #endregion
 
-    #region Attacks
-
-     // Variables 
-     public bool attackInput;
-     public bool interactInput;
-  
-    
-     
-     private void OnAttack(InputValue value)
-     {
-         attackInput = value.isPressed;
-     }
-     
-     
-     private void OnInteract(InputValue value)
-     {
-         interactInput =  value.isPressed;
-     }
-     
-    #endregion
-
    
+    private void OnSkipDial(InputValue value)
+    {
+        if (value.isPressed)
+        {
+            isSkip = true;
+            lastSkipPressed = Time.time;
+        }
+    }
+    public bool ConsumeSkip()
+    {
+        if (isSkip)
+        {
+            if (Time.time - lastSkipPressed > skipBufferTime)
+            {
+                isSkip = false;
+                return false;
+            }
+            else
+            {
+                isSkip = false;
+                return true;
+            }
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-    
 
-   
 
-  
 
-   
-    
-    
+
+
+
+
 }

@@ -184,14 +184,6 @@ public class WallRunning : MonoBehaviour
         rb.AddForce(wallForward * wallRunForce, ForceMode.Force);
         stamina.Drain(wallRunStaminaCost);
         
-        if (controler != null)
-        {
-            if (controler.upwardsRunning)
-                rb.linearVelocity = new Vector3(rb.linearVelocity.x, wallClimbSpeed, rb.linearVelocity.z);
-            if (controler.downwardsRunning)
-                rb.linearVelocity = new Vector3(rb.linearVelocity.x, -wallClimbSpeed, rb.linearVelocity.z);
-        }
-        
         if (!(wallLeft && horizontalInput > 0f) && !(wallRight && horizontalInput < 0f))
         {
             rb.AddForce(-wallNormal * 100f, ForceMode.Force);
