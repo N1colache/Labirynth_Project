@@ -42,7 +42,6 @@ public class PlayerHealth : MonoBehaviour
         {
             Die();
         }
-        Debug.Log(CurrentHealth);
     }
     public void Heal(float amount)
     {

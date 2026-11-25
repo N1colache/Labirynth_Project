@@ -80,8 +80,7 @@ public class Vaulting : MonoBehaviour
             obstacleLow = Physics.Raycast(transform.position + Vector3.up * lowerRayHeight, orientation.forward, out RaycastHit lowerHit, distanceFrontPlayer , whatIsVaulting);
             obstacleHigh =  Physics.Raycast(transform.position + Vector3.up * topRayHeight, orientation.forward, distanceFrontPlayer , whatIsVaulting);
             bool sprint = pm.state == PlayerMovement.MovementState.Sprinting;
-            bool canStride = false;
-
+            
             if (onWall && (sprint || balancing.OnBeam && cm.sprintInput && !stamina.IsExhausted))
             {
                 StridePoints.Clear();
@@ -120,23 +119,17 @@ public class Vaulting : MonoBehaviour
                 }
                
                 int wallCount =  StridePoints.Count;
-                //Debug.Log(StridePoints.Count);
                 
                 bool groundBehind = Physics.Raycast(currentWall + (orientation.forward * lengthObstacle) + (Vector3.up * 2), Vector3.down, out RaycastHit backHit, 4f, whatIsGround | whatIsVaulting);
                 
-                
                 if (groundBehind && backHit.point.y < currentWall.y - 0.3f)
                 {
-                    
                     destination = backHit.point;
                     StridePoints.Add(backHit.point);
-                    
                 }
                 else
                 {
-                    
                     destination = top;
-                    
                 }
                 
                 Vector3 summit = top + Vector3.up * (playerHalfHeight +  clearance);
@@ -152,14 +145,8 @@ public class Vaulting : MonoBehaviour
                     {
                         StartCoroutine(VaultRoutine(transform.position, summit, end));
                     }
-                     
                 }
-                
-               
             }
-            
-            Debug.DrawRay(transform.position + Vector3.up * lowerRayHeight, orientation.forward * distanceFrontPlayer, Color.red);
-            Debug.DrawRay(transform.position + Vector3.up * topRayHeight, orientation.forward * distanceFrontPlayer, Color.red);
         }
         else
         {
