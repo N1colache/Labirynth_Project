@@ -58,14 +58,14 @@ public class LandingRoll : MonoBehaviour
         if (pm.grounded && !wasGrounded)
         {
             float heinghtfall =  heightPoint - transform.position.y;
-            float dammage =  (heinghtfall - safeFallHeight) * damagePerMeter;
-            dammage = Mathf.Max(0,dammage);
+            float damage =  (heinghtfall - safeFallHeight) * damagePerMeter;
+            damage = Mathf.Max(0,damage);
             
             if (heinghtfall >= minFallHeight)
             {
                 if (cm != null && Time.time - cm.LastCrouchPressTime < lapsTimeCrouchInput)
                 {
-                    dammage *= rollDamageMultiplier;
+                    damage *= rollDamageMultiplier;
                     Rolling();
                 }
                 else 
@@ -73,9 +73,9 @@ public class LandingRoll : MonoBehaviour
                     HardLanding();
                 }
 
-                if (dammage > 0)
+                if (damage > 0)
                 {
-                    health.TakeDamage(dammage);
+                    health.TakeDamage(damage);
                 }
             }
             

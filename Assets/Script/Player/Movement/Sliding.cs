@@ -54,18 +54,15 @@ public class Sliding : MonoBehaviour
     private void SlideMovement()
     {
         if (orientation == null) return;
-
-       
-
-        // Glissade sur sol plat ou en montée
+        
         if (!pm.OnSlope() || rb.linearVelocity.y > -0.1f)
         {
             rb.AddForce(slideDirection * slideForce, ForceMode.Force);
 
-            // Décompte correct du timer en FixedUpdate
+            
             slideTimer -= Time.fixedDeltaTime;
         }
-        // Glissade en descente (prise de vitesse infinie/conservée)
+       
         else
         {
             rb.AddForce(pm.GetSlopeMoveDirection(slideDirection) * slideForce, ForceMode.Force);
