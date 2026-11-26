@@ -1,62 +1,104 @@
-using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
+using UnityEngine;
 using TMPro;
 
+
+[RequireComponent(typeof(Collider))]
 public class Dialogue : MonoBehaviour
 {
-    public TextMeshProUGUI textComp;
-    public string[] lines;
-    public float textSpeed = 0.5f;
-    private int index;
-    [SerializeField] private Rigidbody rb;
-    [SerializeField] private ControlerManager controler;
-    private bool ReadyToSkip = true;
+    [Header("UI")]
+    [SerializeField] private GameObject dialogueBox;
+    [SerializeField] private TextMeshProUGUI textComp;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("Testo")]
+    [SerializeField, TextArea] private string[] lines;
+    [SerializeField] private float textSpeed = 0.05f;
+    [SerializeField] private float skipCooldown = 0.2f;
+
+    [Header("Attivazione")]
+    [SerializeField] private Rigidbody rb;
+    [SerializeField] private bool playOnce = true;
+
+    private ControlerManager controler;
+    private int index;
+    private float nextSkipTime;
+    private Coroutine typing;
+    private bool isRunning;
+    private bool hasPlayed;
+
+    private void Reset()
+    {
+        GetComponent<Collider>().isTrigger = true;
+    }
+
     void Start()
     {
-        controler = rb.GetComponentInParent<ControlerManager>();
-        textComp.text = string.Empty;
+        if (dialogueBox != null) dialogueBox.SetActive(false);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (isRunning || (playOnce && hasPlayed)) return;
+
+        Rigidbody otherRb = other.attachedRigidbody;
+        if (otherRb == null) return;
+
+        if (rb != null && otherRb != rb) return;
+
+        ControlerManager found = otherRb.GetComponentInParent<ControlerManager>();
+        if (found == null) return;
+
+        controler = found;
         StartDialogue();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (ReadyToSkip && controler.ConsumeSkip())
+        if (!isRunning || controler == null || Time.unscaledTime < nextSkipTime) return;
+        if (!controler.ConsumeSkip()) return;
+
+        nextSkipTime = Time.unscaledTime + skipCooldown;
+
+        if (typing != null)
         {
-            Debug.Log("skipped");
-            ReadyToSkip = false;
-            if(textComp.text == lines[index])
-            {
-                NextLine();
-            }
-            else
-            {
-                StopAllCoroutines();
-                textComp.text = lines[index];
-            }
-            /*if (lines[index].Length > lines[index].Length)
-            {
-            }*/
-            Invoke(nameof(ResetSkip),1.0f);
+            
+            StopCoroutine(typing);
+            typing = null;
+            textComp.maxVisibleCharacters = int.MaxValue;
+        }
+        else
+        {
+            NextLine();
         }
     }
 
     void StartDialogue()
     {
+        if (lines == null || lines.Length == 0) return;
+
+        isRunning = true;
+        hasPlayed = true;
         index = 0;
-        StartCoroutine(TypeLine());
+        nextSkipTime = Time.unscaledTime + skipCooldown;
+
+        if (dialogueBox != null) dialogueBox.SetActive(true);
+        typing = StartCoroutine(TypeLine());
     }
 
     IEnumerator TypeLine()
     {
-        foreach (char c in lines[index].ToCharArray())
+        textComp.text = lines[index];
+        textComp.maxVisibleCharacters = 0;
+        textComp.ForceMeshUpdate();
+        int total = textComp.textInfo.characterCount;
+
+        for (int i = 1; i <= total; i++)
         {
-            textComp.text += c;
-            yield return new WaitForSeconds(textSpeed);
+            textComp.maxVisibleCharacters = i;
+            yield return new WaitForSecondsRealtime(textSpeed); 
         }
+
+        typing = null;
     }
 
     void NextLine()
@@ -64,20 +106,24 @@ public class Dialogue : MonoBehaviour
         if (index < lines.Length - 1)
         {
             index++;
-            textComp.text = string.Empty;
-            StartCoroutine (TypeLine());
-
+            typing = StartCoroutine(TypeLine());
         }
         else
         {
-            gameObject.SetActive(false);
-
+            EndDialogue();
         }
-
     }
 
-    private void ResetSkip()
+    void EndDialogue()
     {
-        ReadyToSkip = true;
+        StopAllCoroutines();
+        typing = null;
+        isRunning = false;
+        if (dialogueBox != null) dialogueBox.SetActive(false);
+    }
+
+    void OnDisable()
+    {
+        if (isRunning) EndDialogue();
     }
 }
