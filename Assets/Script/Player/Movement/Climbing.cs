@@ -72,14 +72,12 @@ public class Climbing : MonoBehaviour
 
     private void StateMachine()
     {
-        // 1. Suspension à un rebord (LedgeGrabbing prioritaire)
         if (lg != null && (lg.holding || lg.exitingLedge))
         {
             if (IsClimbing) StopClimbing();
             return;
         }
-
-        // 2. En phase d'éjection (Post-ClimbJump)
+        
         if (ExitingWall)
         {
             if (IsClimbing) StopClimbing();
@@ -95,8 +93,7 @@ public class Climbing : MonoBehaviour
 
             return;
         }
-
-        // 3. Escalade active
+        
         bool canClimb = wallFront && controler != null && controler.moveInput.y > 0 && controler.jumpHeld && wallLookAngle < maxWallLookAngle && !pm.IsBusy;
 
         if (canClimb && !ExitingWall && !stamina.IsExhausted)
@@ -140,8 +137,7 @@ public class Climbing : MonoBehaviour
         wallLookAngle = Vector3.Angle(orientation.forward, -frontWallHit.normal);
 
         bool isNewWall = frontWallHit.transform != lastWall || Vector3.Angle(lastWallNormal, frontWallHit.normal) > minWallNormalAngleChange;
-
-        // Réinitialise la jauge d'escalade lors de l'accès à un nouveau mur ou si le joueur touche le sol
+        
         if (isNewWall || (pm != null && pm.grounded))
         {
             climTimer = maxClimTime;
@@ -162,7 +158,6 @@ public class Climbing : MonoBehaviour
 
     private void ClimbingMovement()
     {
-        // Déplacement vertical contrôlé sur le mur
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, climSpeed, rb.linearVelocity.z);
     }
 

@@ -70,7 +70,6 @@ public class LedgeGrabbing : MonoBehaviour
    {
       float horizontalInput = controler.moveInput.x;
       
-      // substate 1 - holding onto ledge
       if (holding)
       {
          FreezeRigidbodyOnLedge();
@@ -217,9 +216,9 @@ public class LedgeGrabbing : MonoBehaviour
       
       Vector3 directionToLedge = hangPoint - transform.position;
       float distanceToLedge = Vector3.Distance(transform.position, hangPoint);
-      float seuil = Mathf.Max(0.1f, moveToLedgeSpeed * Time.deltaTime);
+      float threshold = Mathf.Max(0.1f, moveToLedgeSpeed * Time.deltaTime);
       
-      if (distanceToLedge > seuil)
+      if (distanceToLedge > threshold)
       {
         
          rb.linearVelocity = (directionToLedge.normalized * moveToLedgeSpeed);
