@@ -58,7 +58,7 @@ public class Test_Matt : MonoBehaviour
     }
  
     // Direction depuis le point de lancer vers le point visé
-    Vector3 forceDirection = (targetPoint - attackPoint.position).normalized;
+    Vector3 forceDirection = (targetPoint - attackPoint.position);
     
     
     
