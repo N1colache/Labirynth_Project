@@ -22,12 +22,12 @@ MonoBehaviour:
   m_AdditionalPlatformBuildSettings: []
   m_OverrideGlobalSceneList: 1
   m_Scenes:
+  - m_enabled: 0
+    m_path: Assets/Scenes/Splash.unity
+    m_guid: d7e38a5ce0a2ea14b99804dde93ff141
   - m_enabled: 1
     m_path: Assets/Scenes/MainMenu.unity
     m_guid: ee9fcb16b6c1e264d9368f2a82e031a5
-  - m_enabled: 1
-    m_path: Assets/Scenes/Splash.unity
-    m_guid: d7e38a5ce0a2ea14b99804dde93ff141
   - m_enabled: 1
     m_path: Assets/Scenes/TechSecne.unity
     m_guid: 2d17e449745d3b749a3fad5101efb28d

@@ -18,11 +18,14 @@ public class Balancing : MonoBehaviour
     [SerializeField] private float maxAngle = 3f;
     [SerializeField] private float balanceStaminaCost = 3f;
     [SerializeField] private float fallPush = 3f;
+    [SerializeField] private float maxBeamWidth = 0.8f;
+    [SerializeField] private float minAlignment = 0.7f;
     [SerializeField] private LayerMask whatIsVaulting;
 
     public Vector3 BeamDirection { get; private set; }
     private Vector3 beamRight;
     private Vector3 beamCenter;
+    private Transform currentBeam;
     private float beamHeight;
     [SerializeField] private float centerStrength = 5f;
     
@@ -56,11 +59,11 @@ public class Balancing : MonoBehaviour
             right = transform.position + orientation.right * rayDiscrepancy * 1.5f;
             left = transform.position - orientation.right * rayDiscrepancy * 1.5f;
               
-            centerHit = Physics.Raycast(center, Vector3.down,out  RaycastHit beamHit, rayLength, whatIsVaulting);
+            centerHit = Physics.SphereCast(center + Vector3.up * 0.5f,0.3f, Vector3.down,out  RaycastHit beamHit, rayLength  + 0.5f  , whatIsVaulting);
             rightHit = Physics.Raycast(right, Vector3.down, rayLength, whatIsVaulting);
             leftHit = Physics.Raycast(left, Vector3.down, rayLength, whatIsVaulting);
 
-            if (centerHit && !rightHit && !leftHit && !pm.vaulting && !stamina.IsExhausted)
+            if (centerHit &&  !pm.vaulting && !stamina.IsExhausted)
             {
                 BoxCollider box = beamHit.transform.GetComponent<BoxCollider>();
 
@@ -68,6 +71,8 @@ public class Balancing : MonoBehaviour
                 {
                     float xColliderLenght = box.size.x * beamHit.transform.lossyScale.x;
                     float zColliderLenght = box.size.z * beamHit.transform.lossyScale.z;
+                    float lenght = Mathf.Min(xColliderLenght, zColliderLenght);
+                    if(lenght > maxBeamWidth) return;
                     
                     if (xColliderLenght < zColliderLenght)
                     {
@@ -81,6 +86,8 @@ public class Balancing : MonoBehaviour
                     Vector3 flat = BeamDirection;
                     flat.y = 0;
                     BeamDirection = flat.normalized;
+                    float alignement = Mathf.Abs(Vector3.Dot(BeamDirection, orientation.forward));
+                    if (alignement < minAlignment) return;
                     if (Vector3.Dot(BeamDirection, orientation.forward) < 0)
                     {
                         BeamDirection = -BeamDirection;
@@ -90,6 +97,7 @@ public class Balancing : MonoBehaviour
                 }
                 else
                 {
+                    if(rightHit || leftHit) return;
                     Vector3 dir = orientation.forward;
                     dir.y = 0;
                     BeamDirection = dir.normalized;
@@ -98,6 +106,7 @@ public class Balancing : MonoBehaviour
                     
                 }
                 beamHeight = beamHit.point.y + vaulting.PlayerHalfHeight;
+                currentBeam = beamHit.transform;
                 OnBeam = true;
             }
                
@@ -108,12 +117,11 @@ public class Balancing : MonoBehaviour
             right = transform.position + beamRight * rayDiscrepancy * 1.5f; 
             left = transform.position -  beamRight *  rayDiscrepancy * 1.5f;
              
-            centerHit = Physics.Raycast(center, Vector3.down, rayLength, whatIsVaulting);
+            centerHit = Physics.SphereCast(center + Vector3.up * 0.5f,0.3f, Vector3.down,out  RaycastHit beamHit, rayLength  + 0.5f  , whatIsVaulting);
             rightHit = Physics.Raycast(right, Vector3.down, rayLength, whatIsVaulting);
-            leftHit = Physics.Raycast(left, Vector3.down, rayLength, whatIsVaulting);  
-                   
+            leftHit = Physics.Raycast(left, Vector3.down, rayLength, whatIsVaulting);
             
-            OnBeam = centerHit && !rightHit && !leftHit && !pm.vaulting;
+            OnBeam = centerHit && beamHit.transform == currentBeam && !pm.vaulting;
         }
         float angle = Mathf.Sin(Time.time * speedOscillation) * maxAngle;
         

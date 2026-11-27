@@ -10,13 +10,14 @@ public class SplashScreen : MonoBehaviour
     [SerializeField] List<CanvasGroup> SplashScreenObjects;
     [SerializeField] private float fadeDuration = 0.5f;
     [SerializeField] private float holdDuration = 1.5f;
+    [SerializeField] private float startDelay = 0.5f;
     [SerializeField] private String nextSceneName = "MainMenu";
     private bool isLoading = false;
 
 
     private void Start()
     {
-        StartCoroutine(PrincipalRoutine());
+        StartCoroutine(WaitRoutine());
     }
     private IEnumerator SplashScreenCoroutine(CanvasGroup splashScreen, float baseAlpha , float endAlpha)
     {
@@ -48,5 +49,11 @@ public class SplashScreen : MonoBehaviour
         if(isLoading)return;
         isLoading = true;
         SceneManager.LoadScene(nextSceneName);
+    }
+
+    private IEnumerator WaitRoutine()
+    {
+        yield return new WaitForSeconds(startDelay);
+        StartCoroutine(PrincipalRoutine());
     }
 }
